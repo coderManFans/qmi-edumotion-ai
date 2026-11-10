@@ -164,9 +164,9 @@ async function generateExplanation() {
             </article>
           </div>
           <div class="pipeline-note">
-            <strong>生成完成：中文配音与动画已合成</strong>
+            <strong>{{ result.audio_status === "completed" ? "生成完成：中文配音与动画已合成" : "生成完成：静音动画视频已合成" }}</strong>
             <p>{{ result.explanation }}</p>
-            <small>每个分镜按语音时长自动调整画面时长，MP4 已包含中文旁白。</small>
+            <small>{{ result.audio_status === "completed" ? "每个分镜按语音时长自动调整画面时长，MP4 已包含中文旁白。" : "当前 TTS 已关闭，MP4 不包含语音旁白。" }}</small>
           </div>
           <div v-if="videoUrl" class="video-output"><span class="eyebrow">MP4 VIDEO</span><h3>动画讲解视频已生成</h3><video :src="videoUrl" controls playsinline></video><a :href="videoUrl" download>下载 MP4 视频</a></div>
           <div class="job-id">任务编号 · {{ result.job_id }}</div>
