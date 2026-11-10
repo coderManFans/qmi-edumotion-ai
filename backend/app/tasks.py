@@ -34,6 +34,7 @@ def generate_problem_video_task(self, job_id: str, problem_text: str, source_typ
         verification_status=solution.verification_status,
         scenes=scenes,
         video_status="completed",
+        audio_status="completed" if audio_path else "disabled",
         video_url=f"/api/v1/problems/videos/{job_id}",
     )
     return response.model_dump(mode="json")
