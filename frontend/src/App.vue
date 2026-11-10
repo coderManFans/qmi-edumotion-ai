@@ -20,6 +20,7 @@ const result = ref<Explanation | null>(null)
 const loading = ref(false)
 const errorMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const videoUrl = ref('')
 
 function onFileChange(event: Event) {
   const target = event.target as HTMLInputElement
@@ -40,14 +41,16 @@ async function generateExplanation() {
   loading.value = true
   errorMessage.value = ''
   result.value = null
+  videoUrl.value = ''
   const body = new FormData()
   if (problemText.value.trim()) body.append('text', problemText.value.trim())
   if (selectedFile.value) body.append('file', selectedFile.value)
   try {
-    const response = await fetch(`${apiBase}/api/v1/problems/explain`, { method: 'POST', body })
+    const response = await fetch(`${apiBase}/api/v1/problems/video`, { method: 'POST', body })
     const data = await response.json().catch(() => null)
     if (!response.ok) throw new Error(data?.detail ?? `处理失败（HTTP ${response.status}）`)
     result.value = data as Explanation
+    videoUrl.value = data.video_url ? `${apiBase}${data.video_url}` : ''
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '请求失败，请确认后端服务已启动。'
   } finally {
@@ -81,10 +84,10 @@ async function generateExplanation() {
         </label>
         <button v-if="selectedFile" class="text-button" type="button" @click="clearFile">移除文件</button>
         <button class="primary" type="button" :disabled="loading || (!problemText.trim() && !selectedFile)" @click="generateExplanation">
-          {{ loading ? '正在识别并生成讲解分镜…' : '生成讲解方案' }}
+          {{ loading ? '正在解题、绘制动画并合成 MP4…' : '生成动画讲解视频' }}
         </button>
         <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-        <p class="hint">当前版本已打通题目导入、文本提取和讲解分镜生成。图片 OCR 需要在服务端安装 Tesseract 与中文语言包。</p>
+        <p class="hint">支持基础数量关系规则解题；配置 LLM 后可调用兼容 OpenAI 的模型服务。视频由 Pillow 绘制动画帧并通过 FFmpeg 导出。当前 MP4 暂无语音旁白。</p>
       </section>
 
       <section class="panel preview-panel">
@@ -103,6 +106,7 @@ async function generateExplanation() {
             <h3>{{ result.problem_title }}</h3>
             <p>{{ result.extracted_text }}</p>
           </div>
+          <div v-if="result.answer" class="answer-banner"><span class="eyebrow">当前答案</span><strong>{{ result.answer }}</strong><small>{{ result.verification_status === 'verified' ? '规则计算已验证' : '尚未验证，请人工核对' }}</small></div>
           <div class="timeline">
             <article v-for="(scene, index) in result.scenes" :key="scene.id" class="scene-card">
               <div class="scene-visual" :class="scene.visual">
@@ -121,6 +125,7 @@ async function generateExplanation() {
             <p>{{ result.explanation }}</p>
             <small>下一阶段：接入题目求解模型、动画渲染引擎、语音合成与 MP4 导出。</small>
           </div>
+          <div v-if="videoUrl" class="video-output"><span class="eyebrow">MP4 VIDEO</span><h3>动画讲解视频已生成</h3><video :src="videoUrl" controls playsinline></video><a :href="videoUrl" download>下载 MP4 视频</a></div>
           <div class="job-id">任务编号 · {{ result.job_id }}</div>
         </article>
       </section>
