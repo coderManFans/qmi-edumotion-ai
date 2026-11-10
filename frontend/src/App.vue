@@ -1,133 +1,179 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-type Subject = 'mathematics' | 'chinese'
-type LessonBlock = { type: string; content?: unknown }
-type LessonScene = { id: string; type: string; narration?: string; blocks: LessonBlock[] }
-type Lesson = {
-  lesson_id: string
-  subject: Subject
-  title: string
-  grade_level: number
-  learning_objectives: string[]
-  scenes: LessonScene[]
+type Scene = { id: string; title: string; narration: string; visual: string; visual_text: string }
+type Explanation = {
+  job_id: string
+  answer?: string | null
+  verification_status?: 'verified' | 'unverified'
+  source_type: string
+  extracted_text: string
+  problem_title: string
+  explanation: string
+  scenes: Scene[]
+  video_status: string
+  audio_status: 'completed' | 'disabled'
+  video_url?: string | null
+}
+type Job = {
+  job_id: string
+  status: 'queued' | 'processing' | 'completed' | 'failed'
+  progress: number
+  stage: string
+  result?: Explanation | null
+  video_url?: string | null
+  error?: string | null
 }
 
-const subject = ref<Subject>('mathematics')
-const topic = ref('认识分数')
-const gradeLevel = ref(4)
-const title = ref('')
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const problemText = ref('')
+const selectedFile = ref<File | null>(null)
+const result = ref<Explanation | null>(null)
 const loading = ref(false)
 const errorMessage = ref('')
-const lesson = ref<Lesson | null>(null)
-const apiStatus = ref('尚未检测')
+const fileInput = ref<HTMLInputElement | null>(null)
+const videoUrl = ref('')
+const jobProgress = ref(0)
+const jobStage = ref('')
+const jobId = ref('')
 
-async function checkApi() {
-  try {
-    const response = await fetch(`${apiBase}/api/v1/health`)
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    apiStatus.value = '已连接'
-  } catch {
-    apiStatus.value = '暂不可用'
-  }
+function onFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  selectedFile.value = target.files?.[0] ?? null
+  result.value = null
+  videoUrl.value = ''
 }
 
-async function generateLesson() {
+function clearFile() {
+  selectedFile.value = null
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+function wait(milliseconds: number) {
+  return new Promise(resolve => window.setTimeout(resolve, milliseconds))
+}
+
+async function generateExplanation() {
+  if (!problemText.value.trim() && !selectedFile.value) {
+    errorMessage.value = '请先粘贴题目，或上传题目文件。'
+    return
+  }
   loading.value = true
   errorMessage.value = ''
-  lesson.value = null
+  result.value = null
+  videoUrl.value = ''
+  jobProgress.value = 0
+  jobStage.value = '正在提交任务…'
+  const body = new FormData()
+  if (problemText.value.trim()) body.append('text', problemText.value.trim())
+  if (selectedFile.value) body.append('file', selectedFile.value)
   try {
-    const response = await fetch(`${apiBase}/api/v1/lessons/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subject: subject.value,
-        topic: topic.value,
-        grade_level: gradeLevel.value,
-        title: title.value || undefined,
-      }),
-    })
-    if (!response.ok) {
-      const detail = await response.json().catch(() => null)
-      throw new Error(detail?.detail?.[0]?.msg ?? `生成失败（HTTP ${response.status}）`)
+    const response = await fetch(apiBase + '/api/v1/problems/video', { method: 'POST', body })
+    const queued = await response.json().catch(() => null) as Job | null
+    if (!response.ok || !queued) {
+      throw new Error((queued as any)?.detail ?? '任务提交失败（HTTP ' + response.status + '）')
     }
-    lesson.value = await response.json() as Lesson
+    jobId.value = queued.job_id
+    jobStage.value = queued.stage
+
+    while (true) {
+      await wait(1500)
+      const statusResponse = await fetch(apiBase + '/api/v1/problems/jobs/' + queued.job_id)
+      const job = await statusResponse.json().catch(() => null) as Job | null
+      if (!statusResponse.ok || !job) throw new Error('获取任务状态失败，请稍后重试。')
+      jobProgress.value = job.progress
+      jobStage.value = job.stage
+      if (job.status === 'failed') throw new Error(job.error ?? '视频生成失败。')
+      if (job.status === 'completed' && job.result) {
+        result.value = job.result
+        videoUrl.value = job.video_url ? apiBase + job.video_url : ''
+        break
+      }
+    }
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '请求失败，请检查后端服务'
+    errorMessage.value = error instanceof Error ? error.message : '请求失败，请确认 API、Redis 和 Worker 已启动。'
   } finally {
     loading.value = false
   }
-}
-
-function blockText(block: LessonBlock): string {
-  if (typeof block.content === 'string') return block.content
-  if (block.type === 'quiz' && block.content && typeof block.content === 'object') {
-    const quiz = block.content as { question?: string }
-    return quiz.question ?? '互动练习'
-  }
-  if (block.type === 'diagram') return '图解内容已包含在 Lesson IR 中'
-  return JSON.stringify(block.content ?? '')
-}
-
-function quizOptions(block: LessonBlock): string[] {
-  if (block.type !== 'quiz' || !block.content || typeof block.content !== 'object') return []
-  return (block.content as { options?: string[] }).options ?? []
 }
 </script>
 
 <template>
   <main class="shell">
     <header class="hero">
-      <span class="eyebrow">AI LEARNING CONTENT STUDIO</span>
+      <span class="eyebrow">PROBLEM → EXPLANATION VIDEO</span>
       <h1>EduMotion AI</h1>
-      <p>把知识变成看得见、听得懂的学习体验。</p>
+      <p>上传一道题，让它变成一步一步看得懂的讲解。</p>
     </header>
 
     <section class="workspace">
-      <form class="generator panel" @submit.prevent="generateLesson">
+      <section class="panel input-panel">
         <div class="section-heading">
-          <div><span class="eyebrow">CREATE A LESSON</span><h2>生成教学内容</h2></div>
-          <span class="status-dot" :class="{ online: apiStatus === '已连接' }">{{ apiStatus }}</span>
+          <div><span class="eyebrow">STEP 01</span><h2>导入题目</h2></div>
+          <span class="tag">文字 / 图片 / PDF</span>
         </div>
-        <label>学科</label>
-        <div class="subject-switch">
-          <button type="button" :class="{ selected: subject === 'mathematics' }" @click="subject = 'mathematics'; topic = '认识分数'; gradeLevel = 4">数学</button>
-          <button type="button" :class="{ selected: subject === 'chinese' }" @click="subject = 'chinese'; topic = '春天的校园'; gradeLevel = 3">语文</button>
+        <label for="problem">直接粘贴题目</label>
+        <textarea id="problem" v-model="problemText" rows="7" maxlength="12000" placeholder="例如：一个长方形的长是 8 厘米，宽是 5 厘米，它的面积是多少？"></textarea>
+        <div class="or-divider"><span>或者上传题目文件</span></div>
+        <label class="upload-zone" for="problem-file">
+          <span class="upload-icon">↑</span>
+          <strong>{{ selectedFile ? selectedFile.name : '选择题目图片或 PDF' }}</strong>
+          <small>支持 TXT、PDF、PNG、JPG、WEBP，最大 15 MB</small>
+          <input id="problem-file" ref="fileInput" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf,text/plain" @change="onFileChange" />
+        </label>
+        <button v-if="selectedFile" class="text-button" type="button" @click="clearFile">移除文件</button>
+        <button class="primary" type="button" :disabled="loading || (!problemText.trim() && !selectedFile)" @click="generateExplanation">
+          {{ loading ? '后台正在生成中文配音视频…' : '生成中文配音讲解视频' }}
+        </button>
+        <div v-if="loading" class="job-progress" aria-live="polite">
+          <div class="progress-heading"><strong>{{ jobStage }}</strong><span>{{ jobProgress }}%</span></div>
+          <div class="progress-track"><span :style="{ width: jobProgress + '%' }"></span></div>
+          <small>任务编号 · {{ jobId || '提交中' }}</small>
         </div>
-        <label for="topic">知识主题 / 故事主题</label>
-        <input id="topic" v-model.trim="topic" required minlength="2" maxlength="100" :placeholder="subject === 'mathematics' ? '例如：认识分数' : '例如：春天的校园'" />
-        <div class="field-row">
-          <div><label for="grade">年级</label><select id="grade" v-model.number="gradeLevel"><option v-for="grade in 12" :key="grade" :value="grade">{{ grade }} 年级</option></select></div>
-          <div><label for="lesson-title">课程标题（可选）</label><input id="lesson-title" v-model.trim="title" maxlength="120" placeholder="自动生成标题" /></div>
-        </div>
-        <button class="primary" type="submit" :disabled="loading || topic.length < 2">{{ loading ? '正在生成…' : '生成课程内容' }}</button>
-        <button class="text-button" type="button" @click="checkApi">检测后端连接</button>
         <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-        <p class="hint">当前为可运行的模板生成 MVP，后续可接入大语言模型。</p>
-      </form>
+        <p class="hint">系统在后台完成解题、中文语音合成和 MP4 音画合成。请保持页面打开以查看实时进度。</p>
+      </section>
 
-      <section class="preview panel">
-        <div class="section-heading"><div><span class="eyebrow">LESSON PREVIEW</span><h2>课程预览</h2></div><span v-if="lesson" class="tag">{{ lesson.scenes.length }} 个场景</span></div>
-        <div v-if="!lesson" class="empty-state"><div class="empty-icon">✦</div><h3>准备好开始创作了吗？</h3><p>选择学科并输入主题，生成后将在这里展示可滚动的课程内容。</p></div>
-        <article v-else class="lesson">
-          <div class="lesson-meta">{{ lesson.subject === 'mathematics' ? '数学' : '语文' }} · {{ lesson.grade_level }} 年级</div>
-          <h3>{{ lesson.title }}</h3>
-          <div class="objectives"><strong>学习目标</strong><ul><li v-for="objective in lesson.learning_objectives" :key="objective">{{ objective }}</li></ul></div>
-          <section v-for="(scene, index) in lesson.scenes" :key="scene.id" class="scene">
-            <div class="scene-number">SCENE 0{{ index + 1 }}</div>
-            <h4>{{ scene.type === 'story' ? '故事阅读' : scene.type === 'question' ? '互动练习' : scene.type === 'summary' ? '本课总结' : '知识讲解' }}</h4>
-            <p v-if="scene.narration" class="narration">{{ scene.narration }}</p>
-            <div v-for="(block, blockIndex) in scene.blocks" :key="blockIndex" class="content-block" :class="block.type">
-              <template v-if="block.type === 'math'"><span class="math-expression">{{ blockText(block) }}</span></template>
-              <template v-else><p>{{ blockText(block) }}</p></template>
-              <ul v-if="quizOptions(block).length" class="quiz-options"><li v-for="option in quizOptions(block)" :key="option">{{ option }}</li></ul>
-            </div>
-          </section>
-          <div class="lesson-id">Lesson ID · {{ lesson.lesson_id }}</div>
+      <section class="panel preview-panel">
+        <div class="section-heading">
+          <div><span class="eyebrow">STEP 02</span><h2>动画讲解分镜</h2></div>
+          <span v-if="result" class="tag">{{ result.scenes.length }} 个镜头</span>
+        </div>
+        <div v-if="!result" class="empty-state">
+          <div class="empty-icon">▶</div>
+          <h3>讲解将在这里呈现</h3>
+          <p>提交题目后，系统会展示识别结果与逐步讲解分镜。</p>
+        </div>
+        <article v-else class="storyboard">
+          <div class="problem-card">
+            <span class="eyebrow">识别到的题目</span>
+            <h3>{{ result.problem_title }}</h3>
+            <p>{{ result.extracted_text }}</p>
+          </div>
+          <div v-if="result.answer" class="answer-banner"><span class="eyebrow">当前答案</span><strong>{{ result.answer }}</strong><small>{{ result.verification_status === 'verified' ? '规则计算已验证' : '尚未验证，请人工核对' }}</small></div>
+          <div class="timeline">
+            <article v-for="(scene, index) in result.scenes" :key="scene.id" class="scene-card">
+              <div class="scene-visual" :class="scene.visual">
+                <span class="scene-index">0{{ index + 1 }}</span>
+                <strong>{{ scene.visual_text }}</strong>
+              </div>
+              <div class="scene-copy">
+                <span class="eyebrow">镜头 0{{ index + 1 }}</span>
+                <h3>{{ scene.title }}</h3>
+                <p>{{ scene.narration }}</p>
+              </div>
+            </article>
+          </div>
+          <div class="pipeline-note">
+            <strong>{{ result.audio_status === "completed" ? "生成完成：中文配音与动画已合成" : "生成完成：静音动画视频已合成" }}</strong>
+            <p>{{ result.explanation }}</p>
+            <small>{{ result.audio_status === "completed" ? "每个分镜按语音时长自动调整画面时长，MP4 已包含中文旁白。" : "当前 TTS 已关闭，MP4 不包含语音旁白。" }}</small>
+          </div>
+          <div v-if="videoUrl" class="video-output"><span class="eyebrow">MP4 VIDEO</span><h3>动画讲解视频已生成</h3><video :src="videoUrl" controls playsinline></video><a :href="videoUrl" download>下载 MP4 视频</a></div>
+          <div class="job-id">任务编号 · {{ result.job_id }}</div>
         </article>
       </section>
     </section>
-    <footer>EduMotion AI · Shared Lesson IR · Web lesson + video renderer</footer>
+    <footer>EduMotion AI · Problem-to-Explanation workflow</footer>
   </main>
 </template>
