@@ -100,7 +100,21 @@ async def solve_problem(problem: str) -> SolvedProblem:
         response.raise_for_status()
     content = response.json()["choices"][0]["message"]["content"].strip()
     content = re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", content)
-    return SolvedProblem.model_validate(json.loads(content))
+    solved = SolvedProblem.model_validate(json.loads(content))
+    # Never trust a model's "verified" flag on its own. Verify simple final arithmetic locally.
+    if solved.answer is not None and solved.steps[-1].expression:
+        expression = solved.steps[-1].expression
+        expression = expression.replace("×", "*").replace("÷", "/").replace("−", "-")
+        left_side = expression.split("=")[0].strip()
+        try:
+            computed = _safe_arithmetic(left_side)
+            expected = float(re.sub(r"[^0-9.\\-]", "", solved.answer))
+            solved.verification_status = "verified" if abs(computed - expected) < 1e-8 else "unverified"
+        except (ValueError, SyntaxError, ZeroDivisionError):
+            solved.verification_status = "unverified"
+    else:
+        solved.verification_status = "unverified"
+    return solved
 
 
 def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationScene]:
