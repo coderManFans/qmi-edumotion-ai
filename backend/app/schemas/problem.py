@@ -22,6 +22,7 @@ class ProblemExplanationResponse(BaseModel):
     verification_status: Literal["verified", "unverified"] = "unverified"
     scenes: list[ExplanationScene]
     video_status: Literal["storyboard_ready", "completed"] = "storyboard_ready"
+    audio_status: Literal["completed", "disabled"] = "disabled"
     video_url: str | None = None
 
 
