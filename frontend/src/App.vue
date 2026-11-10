@@ -14,6 +14,15 @@ type Explanation = {
   video_status: string
   video_url?: string | null
 }
+type Job = {
+  job_id: string
+  status: 'queued' | 'processing' | 'completed' | 'failed'
+  progress: number
+  stage: string
+  result?: Explanation | null
+  video_url?: string | null
+  error?: string | null
+}
 
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 const problemText = ref('')
@@ -23,6 +32,9 @@ const loading = ref(false)
 const errorMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const videoUrl = ref('')
+const jobProgress = ref(0)
+const jobStage = ref('')
+const jobId = ref('')
 
 function onFileChange(event: Event) {
   const target = event.target as HTMLInputElement
@@ -36,6 +48,10 @@ function clearFile() {
   if (fileInput.value) fileInput.value.value = ''
 }
 
+function wait(milliseconds: number) {
+  return new Promise(resolve => window.setTimeout(resolve, milliseconds))
+}
+
 async function generateExplanation() {
   if (!problemText.value.trim() && !selectedFile.value) {
     errorMessage.value = '请先粘贴题目，或上传题目文件。'
@@ -45,17 +61,36 @@ async function generateExplanation() {
   errorMessage.value = ''
   result.value = null
   videoUrl.value = ''
+  jobProgress.value = 0
+  jobStage.value = '正在提交任务…'
   const body = new FormData()
   if (problemText.value.trim()) body.append('text', problemText.value.trim())
   if (selectedFile.value) body.append('file', selectedFile.value)
   try {
-    const response = await fetch(`${apiBase}/api/v1/problems/video`, { method: 'POST', body })
-    const data = await response.json().catch(() => null)
-    if (!response.ok) throw new Error(data?.detail ?? `处理失败（HTTP ${response.status}）`)
-    result.value = data as Explanation
-    videoUrl.value = data.video_url ? `${apiBase}${data.video_url}` : ''
+    const response = await fetch(apiBase + '/api/v1/problems/video', { method: 'POST', body })
+    const queued = await response.json().catch(() => null) as Job | null
+    if (!response.ok || !queued) {
+      throw new Error((queued as any)?.detail ?? '任务提交失败（HTTP ' + response.status + '）')
+    }
+    jobId.value = queued.job_id
+    jobStage.value = queued.stage
+
+    while (true) {
+      await wait(1500)
+      const statusResponse = await fetch(apiBase + '/api/v1/problems/jobs/' + queued.job_id)
+      const job = await statusResponse.json().catch(() => null) as Job | null
+      if (!statusResponse.ok || !job) throw new Error('获取任务状态失败，请稍后重试。')
+      jobProgress.value = job.progress
+      jobStage.value = job.stage
+      if (job.status === 'failed') throw new Error(job.error ?? '视频生成失败。')
+      if (job.status === 'completed' && job.result) {
+        result.value = job.result
+        videoUrl.value = job.video_url ? apiBase + job.video_url : ''
+        break
+      }
+    }
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '请求失败，请确认后端服务已启动。'
+    errorMessage.value = error instanceof Error ? error.message : '请求失败，请确认 API、Redis 和 Worker 已启动。'
   } finally {
     loading.value = false
   }
@@ -87,10 +122,15 @@ async function generateExplanation() {
         </label>
         <button v-if="selectedFile" class="text-button" type="button" @click="clearFile">移除文件</button>
         <button class="primary" type="button" :disabled="loading || (!problemText.trim() && !selectedFile)" @click="generateExplanation">
-          {{ loading ? '正在解题、绘制动画并合成 MP4…' : '生成动画讲解视频' }}
+          {{ loading ? '后台正在生成中文配音视频…' : '生成中文配音讲解视频' }}
         </button>
+        <div v-if="loading" class="job-progress" aria-live="polite">
+          <div class="progress-heading"><strong>{{ jobStage }}</strong><span>{{ jobProgress }}%</span></div>
+          <div class="progress-track"><span :style="{ width: jobProgress + '%' }"></span></div>
+          <small>任务编号 · {{ jobId || '提交中' }}</small>
+        </div>
         <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-        <p class="hint">支持基础数量关系规则解题；配置 LLM 后可调用兼容 OpenAI 的模型服务。视频由 Pillow 绘制动画帧并通过 FFmpeg 导出。当前 MP4 暂无语音旁白。</p>
+        <p class="hint">系统在后台完成解题、中文语音合成和 MP4 音画合成。请保持页面打开以查看实时进度。</p>
       </section>
 
       <section class="panel preview-panel">
@@ -124,9 +164,9 @@ async function generateExplanation() {
             </article>
           </div>
           <div class="pipeline-note">
-            <strong>当前进度：讲解分镜已生成</strong>
+            <strong>生成完成：中文配音与动画已合成</strong>
             <p>{{ result.explanation }}</p>
-            <small>当前已生成程序化动画 MP4；下一阶段将接入中文 TTS、异步任务和更丰富的学科动画模板。</small>
+            <small>每个分镜按语音时长自动调整画面时长，MP4 已包含中文旁白。</small>
           </div>
           <div v-if="videoUrl" class="video-output"><span class="eyebrow">MP4 VIDEO</span><h3>动画讲解视频已生成</h3><video :src="videoUrl" controls playsinline></video><a :href="videoUrl" download>下载 MP4 视频</a></div>
           <div class="job-id">任务编号 · {{ result.job_id }}</div>
