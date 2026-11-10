@@ -12,6 +12,7 @@ type Explanation = {
   explanation: string
   scenes: Scene[]
   video_status: string
+  audio_status: 'completed' | 'disabled'
   video_url?: string | null
 }
 type Job = {
