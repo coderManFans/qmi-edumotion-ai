@@ -1,5 +1,7 @@
 # EduMotion AI 系统架构设计（ARCHITECTURE）
 
+> **当前实现进度说明（2026-11-10）**：当前主流程为题目导入 → 文本提取 → LLM/规则求解 → 分镜 → Pillow 动画帧 → FFmpeg MP4。LLM 通过 OpenAI-compatible Chat Completions 配置；视频渲染已提供同步 MVP API。Celery/Redis 持久化任务、TTS 配音、扫描 PDF OCR 和对象存储迁移仍是后续架构目标。课程/项目域不是当前主流程的交付重点。
+
 -   文档版本：1.0
 -   架构风格：模块化单体 + 异步 Worker
 -   部署策略：本地优先，云端可迁移
