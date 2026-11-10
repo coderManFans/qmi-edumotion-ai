@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import tempfile
+from functools import lru_cache
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -11,17 +12,20 @@ from app.schemas.problem import ExplanationScene
 WIDTH, HEIGHT = 1280, 720
 
 
+@lru_cache(maxsize=16)
 def _font(size: int, bold: bool = False):
     names = [
         "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc" if bold else "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc" if bold else "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Bold.otf" if bold else "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+        "/usr/share/fonts/truetype/arphic/uming.ttc",
         "/System/Library/Fonts/PingFang.ttc", "C:/Windows/Fonts/msyh.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
     for name in names:
         if Path(name).exists():
             return ImageFont.truetype(name, size=size)
-    return ImageFont.load_default()
+    raise RuntimeError("未找到支持中文的字体。请安装 Noto CJK 字体后重试。")
 
 
 def _lines(value: str, limit: int, count: int) -> list[str]:
