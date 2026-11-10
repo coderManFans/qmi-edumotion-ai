@@ -20,7 +20,6 @@ def _font(size: int, bold: bool = False):
         "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Bold.otf" if bold else "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
         "/usr/share/fonts/truetype/arphic/uming.ttc",
         "/System/Library/Fonts/PingFang.ttc", "C:/Windows/Fonts/msyh.ttc",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
     for name in names:
         if Path(name).exists():
