@@ -16,7 +16,7 @@
 
 ### 1. 系统依赖
 
-需要安装 FFmpeg。图片 OCR 需要 Tesseract 和简体中文语言包（chi_sim）。中文视频字幕/画面建议安装 Noto CJK 字体。
+需要安装 FFmpeg。图片 OCR 需要 Tesseract 和简体中文语言包（chi_sim）。中文视频画面必须安装 Noto CJK 字体；仓库提供的后端 Dockerfile 已包含该字体。
 
 ### 2. 后端
 
