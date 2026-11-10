@@ -131,4 +131,10 @@ def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationSc
         id="scene-0", title="题目呈现", narration="我们先来看这道题。",
         visual="question", visual_text=original_text[:100],
     ))
+    scenes.append(ExplanationScene(
+        id="scene-check", title="检查与回顾",
+        narration="最后检查运算关系、计算结果和题目单位，确认答案真正回应了问题。",
+        visual="check",
+        visual_text=(f"答案：{solution.answer}" if solution.answer is not None else "答案尚未验证"),
+    ))
     return scenes
