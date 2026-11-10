@@ -1,0 +1,1 @@
+"""EduMotion AI backend application."""
