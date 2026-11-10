@@ -108,7 +108,7 @@ async def solve_problem(problem: str) -> SolvedProblem:
         left_side = expression.split("=")[0].strip()
         try:
             computed = _safe_arithmetic(left_side)
-            expected = float(re.sub(r"[^0-9.\\-]", "", solved.answer))
+            expected = float(re.sub(r"[^0-9.\-]", "", solved.answer))
             solved.verification_status = "verified" if abs(computed - expected) < 1e-8 else "unverified"
         except (ValueError, SyntaxError, ZeroDivisionError):
             solved.verification_status = "unverified"
