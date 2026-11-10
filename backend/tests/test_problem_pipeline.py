@@ -6,7 +6,7 @@ def test_text_problem_creates_five_explanation_scenes():
     result = build_explanation("小明有 12 个苹果，平均分给 3 个同学，每人几个？", "text")
     assert result.source_type == "text"
     assert len(result.scenes) == 5
-    assert result.scenes[0].title == "读懂题目"
+    assert result.scenes[0].title == "题目呈现"
     assert result.scenes[-1].visual == "check"
 
 
