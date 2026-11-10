@@ -4,6 +4,8 @@ import { ref } from 'vue'
 type Scene = { id: string; title: string; narration: string; visual: string; visual_text: string }
 type Explanation = {
   job_id: string
+  answer?: string | null
+  verification_status?: 'verified' | 'unverified'
   source_type: string
   extracted_text: string
   problem_title: string
@@ -26,6 +28,7 @@ function onFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   selectedFile.value = target.files?.[0] ?? null
   result.value = null
+  videoUrl.value = ''
 }
 
 function clearFile() {
@@ -123,7 +126,7 @@ async function generateExplanation() {
           <div class="pipeline-note">
             <strong>当前进度：讲解分镜已生成</strong>
             <p>{{ result.explanation }}</p>
-            <small>下一阶段：接入题目求解模型、动画渲染引擎、语音合成与 MP4 导出。</small>
+            <small>当前已生成程序化动画 MP4；下一阶段将接入中文 TTS、异步任务和更丰富的学科动画模板。</small>
           </div>
           <div v-if="videoUrl" class="video-output"><span class="eyebrow">MP4 VIDEO</span><h3>动画讲解视频已生成</h3><video :src="videoUrl" controls playsinline></video><a :href="videoUrl" download>下载 MP4 视频</a></div>
           <div class="job-id">任务编号 · {{ result.job_id }}</div>
