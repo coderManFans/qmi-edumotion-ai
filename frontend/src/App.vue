@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 type Subject = 'mathematics' | 'chinese'
 type LessonBlock = { type: string; content?: unknown }
@@ -22,8 +22,6 @@ const loading = ref(false)
 const errorMessage = ref('')
 const lesson = ref<Lesson | null>(null)
 const apiStatus = ref('尚未检测')
-
-const subjectLabel = computed(() => subject.value === 'mathematics' ? '数学' : '语文')
 
 async function checkApi() {
   try {
