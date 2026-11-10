@@ -5,5 +5,13 @@ class Settings(BaseSettings):
     app_name: str = "EduMotion AI"
     api_v1_prefix: str = "/api/v1"
     cors_origins: list[str] = ["http://localhost:5173"]
+    llm_base_url: str = ""
+    llm_api_key: str = ""
+    llm_model: str = ""
+    llm_timeout_seconds: float = 45.0
+    ffmpeg_bin: str = "ffmpeg"
+    video_output_dir: str = "./data/renders"
+    video_fps: int = 12
+    video_scene_seconds: int = 3
 
 settings = Settings()
