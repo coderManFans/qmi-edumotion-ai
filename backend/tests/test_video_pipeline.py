@@ -21,7 +21,7 @@ def test_storyboard_contains_original_question_scene():
     solved = _local_solution("12 个苹果送走 4 个，还剩多少？")
     scenes = to_scenes(solved, "12 个苹果送走 4 个，还剩多少？")
     assert scenes[0].title == "题目呈现"
-    assert len(scenes) == len(solved.steps) + 1
+    assert len(scenes) == len(solved.steps) + 2
 
 
 def test_renderer_produces_a_video_frame():
