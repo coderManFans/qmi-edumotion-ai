@@ -1,21 +1,27 @@
 # EduMotion AI
 
-把题目内容或题目文件转化为逐步讲解分镜，并进一步生成动画讲解视频。
+把题目文字、图片或 PDF 转成可播放的动画讲解视频。
 
-## 当前核心流程 MVP
+## 当前核心流程
 
-1. 粘贴题目文字，或上传 TXT、可复制文字的 PDF、PNG、JPG、WEBP。
-2. 后端提取题目文本（PDF 使用文本层解析；图片使用 Tesseract OCR）。
-3. 生成结构化讲解分镜，包含读题、拆解条件、逐步思考、结论和检查。
-4. 前端展示识别结果与分镜预览。
+1. 粘贴题目，或上传 TXT、可复制文字的 PDF、PNG、JPG、WEBP。
+2. 提取题目文本（PDF 文本层解析；图片通过 Tesseract OCR）。
+3. 解题：配置 OpenAI-compatible Chat Completions 服务时调用 LLM；未配置时使用受限的基础数量关系规则，无法可靠判断就明确标记未验证。
+4. 生成讲解分镜，Pillow 绘制动态帧，FFmpeg 编码为 MP4。
+5. 在页面内播放或下载视频。
 
-> 当前实现已打通题目导入和分镜预览。讲解策略暂时是 deterministic storyboard adapter，不会假装已经完成数学求解；真正的 LLM 解题、Manim/FFmpeg 动画、TTS 配音和 MP4 导出仍是后续核心开发项。
+当前视频为 1280×720 的程序化讲解卡片动画，含逐镜头内容和进度动效。**本版尚未接入 TTS，MP4 暂无语音旁白；当前同步生成，暂未加入持久化任务队列。**
 
-## Run locally
+## 本地运行
 
-### Backend
+### 1. 系统依赖
+
+需要安装 FFmpeg。图片 OCR 需要 Tesseract 和简体中文语言包（chi_sim）。中文视频字幕/画面建议安装 Noto CJK 字体。
+
+### 2. 后端
 
 ```bash
+cp .env.example .env
 cd backend
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
@@ -23,9 +29,17 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-图片 OCR 还需要安装系统级 Tesseract，并安装简体中文语言包（chi_sim）。如果暂时没有安装，文字输入和文本型 PDF 仍可使用。
+如果要使用真实 LLM 解题，在根目录 `.env` 配置：
 
-### Frontend
+```dotenv
+LLM_BASE_URL=https://your-openai-compatible-host/v1
+LLM_API_KEY=your-api-key
+LLM_MODEL=your-model-name
+```
+
+留空时会使用本地规则解题，仅覆盖少量明确的基础数量关系题；不确定的问题不会编造答案。
+
+### 3. 前端
 
 ```bash
 cd frontend
@@ -35,17 +49,35 @@ npm run dev
 
 打开 http://localhost:5173。可通过 `VITE_API_BASE_URL` 配置后端地址。
 
+### 4. Docker 构建后端运行环境
+
+从仓库根目录执行：
+
+```bash
+docker build -t edumotion-backend ./backend
+docker run --rm -p 8000:8000 -v "$PWD/data:/app/data" --env-file .env edumotion-backend
+```
+
+镜像包含 FFmpeg、Noto CJK 和 Tesseract 中文 OCR 运行依赖。
+
 ## API
 
-- `GET /api/v1/health` — health check
-- `POST /api/v1/problems/explain` — multipart/form-data，字段 `text`（可选）和 `file`（可选）
-- `POST /api/v1/lessons/generate` — 旧版课程 demo API，暂时保留，不作为产品主流程
+- `POST /api/v1/problems/explain` — 生成讲解分镜预览。
+- `POST /api/v1/problems/video` — 生成解题讲解并同步导出 MP4（multipart/form-data: `text` 或 `file`）。
+- `GET /api/v1/problems/videos/{job_id}` — 播放/下载生成的 MP4。
+- `GET /api/v1/health` — 健康检查。
 
-上传文件最大 15 MB。PDF 目前支持可复制文字的 PDF；扫描 PDF OCR 尚未接入。
+上传文件最大 15 MB。PDF 目前支持文字型 PDF；扫描版 PDF OCR 尚未接入。MP4 输出目录由 `VIDEO_OUTPUT_DIR` 配置，默认 `./data/renders`。
 
-## Repository layout
+## 测试
 
-- `backend/` — FastAPI API、题目解析、讲解分镜服务和测试
-- `frontend/` — Vue 3 题目导入和分镜工作台
-- `shared/lesson-ir/` — 旧版课程 IR 示例（非当前主流程）
-- `infra/` — PostgreSQL / Redis 本地基础设施
+```bash
+cd backend
+pytest
+```
+
+## 设计文档
+
+- [产品需求规格](docs/PRODUCT_SPEC.md)
+- [Lesson IR 规范](docs/LESSON_IR_SPEC.md)
+- [系统架构](docs/ARCHITECTURE.md)
