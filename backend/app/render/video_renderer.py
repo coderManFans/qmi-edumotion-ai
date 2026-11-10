@@ -1,3 +1,4 @@
+import math
 import shutil
 import subprocess
 import tempfile
@@ -57,32 +58,56 @@ def _frame(scene: ExplanationScene, index: int, total: int, frame: int, frames_p
     return image
 
 
-def render_explanation_video(job_id: str, scenes: list[ExplanationScene]) -> Path:
+def render_explanation_video(
+    job_id: str,
+    scenes: list[ExplanationScene],
+    audio_path: Path | None = None,
+    scene_durations: list[float] | None = None,
+) -> Path:
     if not shutil.which(settings.ffmpeg_bin):
         raise RuntimeError(f"未找到 FFmpeg：{settings.ffmpeg_bin}。请安装 FFmpeg 并加入 PATH。")
     output_dir = Path(settings.video_output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{job_id}.mp4"
     fps = max(6, min(settings.video_fps, 24))
-    seconds = max(2, min(settings.video_scene_seconds, 8))
-    frames_per_scene = fps * seconds
+    default_frames = fps * max(2, min(settings.video_scene_seconds, 8))
+    if scene_durations and len(scene_durations) != len(scenes):
+        raise ValueError("语音分段时长数量必须与分镜数量一致。")
+
     with tempfile.TemporaryDirectory(prefix="edumotion-render-") as tmp:
         frame_dir = Path(tmp)
         frame_number = 0
         for index, scene in enumerate(scenes):
+            duration = scene_durations[index] if scene_durations else default_frames / fps
+            frames_per_scene = max(1, min(math.ceil(max(duration, 0.2) * fps), fps * 120))
             for frame_index in range(frames_per_scene):
                 _frame(scene, index, len(scenes), frame_index, frames_per_scene).save(
                     frame_dir / f"frame_{frame_number:06d}.png", optimize=True
                 )
                 frame_number += 1
+
+        silent_path = frame_dir / "silent.mp4"
         command = [
             settings.ffmpeg_bin, "-hide_banner", "-loglevel", "error", "-y",
             "-framerate", str(fps), "-i", str(frame_dir / "frame_%06d.png"),
             "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-            "-movflags", "+faststart", str(output_path),
+            "-movflags", "+faststart", str(silent_path),
         ]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=180, check=False)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=600, check=False)
         if result.returncode:
-            output_path.unlink(missing_ok=True)
-            raise RuntimeError(f"FFmpeg 合成失败：{result.stderr[-1200:]}")
+            raise RuntimeError(f"FFmpeg 视频编码失败：{result.stderr[-1200:]}")
+
+        if audio_path:
+            mux = [
+                settings.ffmpeg_bin, "-hide_banner", "-loglevel", "error", "-y",
+                "-i", str(silent_path), "-i", str(audio_path),
+                "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
+                "-c:a", "aac", "-b:a", "128k", "-shortest",
+                "-movflags", "+faststart", str(output_path),
+            ]
+            mux_result = subprocess.run(mux, capture_output=True, text=True, timeout=180, check=False)
+            if mux_result.returncode:
+                raise RuntimeError(f"FFmpeg 音画合成失败：{mux_result.stderr[-1200:]}")
+        else:
+            shutil.copy2(silent_path, output_path)
     return output_path
