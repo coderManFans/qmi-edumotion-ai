@@ -1,4 +1,4 @@
-from app.ai.problem_solver import _local_solution, to_scenes
+from app.ai.problem_solver import SolvedProblem, SolvedStep, _local_solution, _verify_model_answer, to_scenes
 from app.services.problem_explanation import build_explanation
 from app.services.problem_input import ProblemInputError, extract_problem_text
 
@@ -40,6 +40,21 @@ def test_unknown_problem_is_not_given_a_fake_answer():
     assert solved.answer is None
     assert solved.verification_status == "unverified"
     assert "不会猜测答案" in solved.explanation
+
+
+def test_llm_answer_is_verified_only_when_final_arithmetic_matches():
+    matching = SolvedProblem(
+        answer="4",
+        verification_status="verified",
+        explanation="divide by four",
+        steps=[
+            SolvedStep(title="step", explanation="calculate", narration="calculate", visual_text="16 / 4 = 4", expression="16 / 4 = 4")
+        ],
+    )
+    mismatching = matching.model_copy(deep=True)
+    mismatching.answer = "5"
+    assert _verify_model_answer(matching).verification_status == "verified"
+    assert _verify_model_answer(mismatching).verification_status == "unverified"
 
 
 def test_scene_script_contains_real_steps_and_verification():
