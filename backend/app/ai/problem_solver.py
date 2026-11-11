@@ -376,7 +376,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Distance = speed × time. Require explicit semantic labels to avoid guessing number roles.
-    if len(values) == 2 and re.search(r"速度|每小时|每分钟", text) and re.search(r"时间|小时|分钟", text) and re.search(r"路程|行驶多远|多少千米|多少米", text):
+    if len(values) == 2 and re.search(r"速度|每小时|每分钟", text) and re.search(r"时间|小时|分钟", text) and re.search(r"求路程|路程是多少|行驶多远|多少千米|多少米", text) and not re.search(r"求速度|速度是多少|求时间|时间是多少|需要多久", text):
         speed, duration = values
         if speed >= 0 and duration >= 0:
             distance = speed * duration
