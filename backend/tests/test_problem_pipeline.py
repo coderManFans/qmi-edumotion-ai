@@ -246,3 +246,38 @@ def test_number_order_is_not_used_for_inverse_travel_problem():
     assert solved.answer == "3小时"
     assert solved.verification_status == "verified"
 
+
+def test_primary_math_benchmark_has_exactly_50_cases_and_matches_solver():
+    import json
+    from pathlib import Path
+
+    fixture = Path(__file__).parent / "fixtures" / "primary_math_benchmark_v1.json"
+    dataset = json.loads(fixture.read_text(encoding="utf-8"))
+    assert dataset["count"] == 50
+    assert len(dataset["cases"]) == 50
+    assert len({case["id"] for case in dataset["cases"]}) == 50
+
+    for case in dataset["cases"]:
+        solved = _local_solution(case["problem"])
+        assert solved.verification_status == case["verification_status"], case["id"]
+        assert solved.answer == case["standard_answer"], case["id"]
+
+
+def test_benchmark_cases_have_complete_teaching_and_source_metadata():
+    import json
+    from pathlib import Path
+
+    fixture = Path(__file__).parent / "fixtures" / "primary_math_benchmark_v1.json"
+    dataset = json.loads(fixture.read_text(encoding="utf-8"))
+    for case in dataset["cases"]:
+        assert case["problem"]
+        assert case["concepts"]
+        assert case["formula"]
+        assert case["solution_steps"]
+        assert case["source_refs"]
+        assert case["verification"]
+        if case["verification_status"] == "verified":
+            assert case["standard_answer"]
+            assert case["calculation_steps"]
+
+
