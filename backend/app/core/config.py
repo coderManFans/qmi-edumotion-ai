@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/1"
     celery_result_expires_seconds: int = 604800
+    celery_task_soft_time_limit_seconds: int = 900
+    celery_task_time_limit_seconds: int = 960
 
     tts_provider: str = "edge"
     tts_voice: str = "zh-CN-XiaoxiaoNeural"
