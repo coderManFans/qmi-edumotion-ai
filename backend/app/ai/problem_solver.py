@@ -121,6 +121,17 @@ def _local_solution(problem: str) -> SolvedProblem:
         match = re.search(rf"{label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
         return float(match.group(1)) if match else None
 
+    if "正方形" in text and "面积" in text and re.search(r"边长.*多少|求.*边长", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
+        return SolvedProblem(
+            answer=None, verification_status="unverified",
+            explanation="题目没有说明面积单位，无法给出完整的长度单位答案。",
+            steps=[
+                SolvedStep(title="提取条件", explanation="只知道正方形面积的数值，未给面积单位。", narration="题目没有说明面积单位。", visual_text="面积单位缺失"),
+                SolvedStep(title="检查单位", explanation="面积单位与边长单位相关，缺少单位信息。", narration="即使能求出边长数值，也无法确定它应使用什么长度单位。", visual_text="单位信息不足"),
+                SolvedStep(title="暂不作答", explanation="需要补充面积单位。", narration="请补充面积单位后再计算。", visual_text="等待补充单位"),
+            ],
+        )
+
     # Reverse geometry: known area and one dimension.
     if "正方形" in text and "面积" in text and re.search(r"边长.*多少|求.*边长", text):
         area = labeled("面积")
@@ -197,7 +208,7 @@ def _local_solution(problem: str) -> SolvedProblem:
                     formula="总价 = 单价 × 数量",
                     rearranged="数量 = 总价 ÷ 单价",
                     substitution=f"{_number_text(total)} ÷ {_number_text(price)}",
-                    result=quantity, unit="个/支/本（按题目对象）", conclusion="购买的数量",
+                    result=quantity, unit=("支" if "支" in text else "本" if "本" in text else "个" if "个" in text else "件"), conclusion="购买的数量",
                     verification=f"{_number_text(price)} × {_number_text(quantity)} = {_number_text(total)}元",
                 )
 
