@@ -93,3 +93,50 @@ def test_unsupported_file_is_rejected():
         assert "仅支持" in str(exc)
     else:
         raise AssertionError("unsupported file should be rejected")
+
+def test_triangle_area_formula():
+    solved = _local_solution("一个三角形底是8厘米，高是5厘米，求面积是多少？")
+    assert solved.answer == "20平方单位"
+    assert solved.verification_status == "verified"
+    assert any("底 × 高 ÷ 2" in step.explanation for step in solved.steps)
+
+
+def test_parallelogram_area_formula():
+    solved = _local_solution("平行四边形底是8厘米，高是5厘米，面积是多少？")
+    assert solved.answer == "40平方单位"
+    assert solved.verification_status == "verified"
+
+
+def test_trapezoid_area_formula():
+    solved = _local_solution("梯形上底是4厘米，下底是8厘米，高是5厘米，求面积？")
+    assert solved.answer == "30平方单位"
+    assert solved.verification_status == "verified"
+
+
+def test_travel_distance_formula():
+    solved = _local_solution("汽车速度是每小时60千米，行驶3小时，路程是多少？")
+    assert solved.answer == "180（按题目单位）"
+    assert solved.verification_status == "verified"
+
+
+def test_unit_price_total_formula():
+    solved = _local_solution("每支铅笔6元，买了4支，一共多少元？")
+    assert solved.answer == "24元"
+    assert solved.verification_status == "verified"
+
+
+def test_circle_area_uses_explicit_radius():
+    solved = _local_solution("圆的半径是2厘米，面积是多少？")
+    assert solved.answer == "12.56平方单位"
+    assert solved.verification_status == "verified"
+
+
+def test_knowledge_catalog_contains_primary_topics():
+    import json
+    from pathlib import Path
+
+    catalog_path = Path(__file__).parents[1] / "app" / "knowledge" / "elementary_math.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    topic_ids = {topic["id"] for topic in catalog["problem_families"]}
+    assert {"square", "rectangle", "triangle", "trapezoid", "distance_speed_time", "percentage"} <= topic_ids
+
