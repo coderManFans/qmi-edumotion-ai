@@ -1,5 +1,6 @@
 import ast
 import json
+import math
 import operator
 import re
 from typing import Literal
@@ -117,7 +118,7 @@ def _local_solution(problem: str) -> SolvedProblem:
 
     # --- Semantic, inverse and unit-aware rules (run before positional fallbacks). ---
     def labeled(label: str):
-        match = re.search(rf"{label}(?:是|为|有|等于|：|:)?(\\d+(?:\\.\\d+)?)", text)
+        match = re.search(rf"{label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
         return float(match.group(1)) if match else None
 
     # Reverse geometry: known area and one dimension.
@@ -215,7 +216,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Fraction word problems: explicitly identify the whole and the fraction.
-    fraction_match = re.search(r"(?:一个数|这本书|全程|全班|总数|原有量)?的?(\\d+)\\s*/\\s*(\\d+)是(\\d+(?:\\.\\d+)?)", text)
+    fraction_match = re.search(r"(?:一个数|这本书|全程|全班|总数|原有量)?的?(\d+)\\s*/\\s*(\d+)是(\d+(?:\.\d+)?)", text)
     if fraction_match and re.search(r"这个数|原来|总数|全程|一共|整体", text):
         numerator, denominator, part = map(float, fraction_match.groups())
         if denominator > 0 and 0 < numerator <= denominator:
@@ -230,7 +231,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Percentage: find the whole when a known percentage of it is given.
-    percent_whole = re.search(r"(?:一个数|原价|原来|原有量)?的?(\\d+(?:\\.\\d+)?)%是(\\d+(?:\\.\\d+)?)", text)
+    percent_whole = re.search(r"(?:一个数|原价|原来|原有量)?的?(\d+(?:\.\d+)?)%是(\d+(?:\.\d+)?)", text)
     if percent_whole and re.search(r"这个数|原来|原价|原有量|单位1|整体", text):
         rate, part = map(float, percent_whole.groups())
         if 0 < rate <= 100:
@@ -245,7 +246,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Direct fraction/percentage of an explicitly named whole.
-    direct_fraction = re.search(r"(\\d+(?:\\.\\d+)?)的(\\d+)\\s*/\\s*(\\d+)(?:是多少|是几)", text)
+    direct_fraction = re.search(r"(\d+(?:\.\d+)?)的(\d+)\\s*/\\s*(\d+)(?:是多少|是几)", text)
     if direct_fraction:
         whole, numerator, denominator = map(float, direct_fraction.groups())
         if denominator > 0 and 0 <= numerator <= denominator:
@@ -267,7 +268,7 @@ def _local_solution(problem: str) -> SolvedProblem:
         "time": {"小时":3600.0,"分钟":60.0,"秒":1.0},
         "mass": {"吨":1000.0,"千克":1.0,"公斤":1.0,"克":0.001},
     }
-    conversion_match = re.search(r"(\\d+(?:\\.\\d+)?)\\s*(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
+    conversion_match = re.search(r"(\d+(?:\.\d+)?)\\s*(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
     target_match = re.search(r"(?:换算成|化成|等于多少|是多少)(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
     if conversion_match and target_match:
         amount = float(conversion_match.group(1))
@@ -297,7 +298,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Multi-step equal groups followed by a change (e.g. boxes, packets, sharing).
-    multi = re.search(r"(\\d+)箱.*每箱(\\d+)(?:瓶|个|本|支).*?(?:卖出|用去|拿走|送出)(\\d+).*?(?:还剩|剩下)", text)
+    multi = re.search(r"(\d+)箱.*每箱(\d+)(?:瓶|个|本|支).*?(?:卖出|用去|拿走|送出)(\d+).*?(?:还剩|剩下)", text)
     if multi:
         groups, each, removed = map(float, multi.groups())
         total = groups * each
