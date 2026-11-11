@@ -2558,5 +2558,27 @@
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
       ]
     }
+  ],
+  "supplementary_public_practice_references": [
+    {
+      "title": "教习网小学数学试题库（按年级/单元整理）",
+      "url": "https://www.51jiaoxi.com/tiku/s1_sub3/",
+      "use": "用于核对常见试卷题型和覆盖范围；不复制受版权保护题干"
+    },
+    {
+      "title": "小学试卷资源中心",
+      "url": "https://appsj.szxuexiao.com/shuxue/index.html",
+      "use": "用于核对各年级专项练习与综合测试的题型分布"
+    },
+    {
+      "title": "21世纪教育小学数学资源",
+      "url": "https://www.21cnjy.com/shuxue/1/9/",
+      "use": "用于核对不同教材版本的同步练习与试卷类别"
+    },
+    {
+      "title": "小学六年级数学试卷公开样例",
+      "url": "https://www.xsc.cn/d/file/20211226/f1629f24722d738244d643074bbc9cc5.pdf",
+      "use": "用于观察百分数、比、圆等综合题的常见考查方式；题目不逐字复用"
+    }
   ]
 }
