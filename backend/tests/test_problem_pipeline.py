@@ -48,7 +48,8 @@ def test_llm_answer_is_verified_only_when_final_arithmetic_matches():
         verification_status="verified",
         explanation="divide by four",
         steps=[
-            SolvedStep(title="step", explanation="calculate", narration="calculate", visual_text="16 / 4 = 4", expression="16 / 4 = 4")
+            SolvedStep(title="step one", explanation="rearrange", narration="rearrange", visual_text="边长 = 周长 ÷ 4"),
+            SolvedStep(title="step two", explanation="calculate", narration="calculate", visual_text="16 / 4 = 4", expression="16 / 4 = 4"),
         ],
     )
     mismatching = matching.model_copy(deep=True)
