@@ -39,7 +39,6 @@ def _safe_arithmetic(expression: str) -> float:
         ast.Sub: operator.sub,
         ast.Mult: operator.mul,
         ast.Div: operator.truediv,
-        ast.Pow: operator.pow,
     }
 
     def visit(node):
