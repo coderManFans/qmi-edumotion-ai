@@ -1277,13 +1277,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方米=10000平方厘米；2×10000=20000",
-      "calculation_steps": "20000平方厘米",
-      "standard_answer": "20000平方厘米换回平方米等于2平方米",
-      "verification": [
-        "单位换算",
-        "面积"
-      ],
+      "formula_rearrangement": "1平方米=10000undefined",
+      "calculation_steps": "2×10000=20000",
+      "standard_answer": "20000undefined",
+      "verification": "20000undefined换回平方米等于2平方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1308,7 +1305,10 @@
           "narration": "单位换算,面积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "面积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1329,13 +1329,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方米=100平方分米；3×100=300",
-      "calculation_steps": "300平方分米",
-      "standard_answer": "300平方分米换回平方米等于3平方米",
-      "verification": [
-        "单位换算",
-        "面积"
-      ],
+      "formula_rearrangement": "1平方米=100undefined",
+      "calculation_steps": "3×100=300",
+      "standard_answer": "300undefined",
+      "verification": "300undefined换回平方米等于3平方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1360,7 +1357,10 @@
           "narration": "单位换算,面积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "面积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1381,13 +1381,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1公顷=10000平方米；5×10000=50000",
-      "calculation_steps": "50000平方米",
-      "standard_answer": "50000平方米换回公顷等于5公顷",
-      "verification": [
-        "单位换算",
-        "面积"
-      ],
+      "formula_rearrangement": "1公顷=10000undefined",
+      "calculation_steps": "5×10000=50000",
+      "standard_answer": "50000undefined",
+      "verification": "50000undefined换回公顷等于5公顷",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1412,7 +1409,10 @@
           "narration": "单位换算,面积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "面积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1433,13 +1433,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方千米=100公顷；4×100=400",
-      "calculation_steps": "400公顷",
-      "standard_answer": "400公顷换回平方千米等于4平方千米",
-      "verification": [
-        "单位换算",
-        "面积"
-      ],
+      "formula_rearrangement": "1平方千米=100undefined",
+      "calculation_steps": "4×100=400",
+      "standard_answer": "400undefined",
+      "verification": "400undefined换回平方千米等于4平方千米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1464,7 +1461,10 @@
           "narration": "单位换算,面积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "面积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1485,13 +1485,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "1立方米换算为立方分米，结果=1000",
-      "calculation_steps": "1000立方分米",
-      "standard_answer": "1000立方分米换回立方米等于1立方米",
-      "verification": [
-        "单位换算",
-        "体积/容积"
-      ],
+      "formula_rearrangement": "1立方米=1000undefined",
+      "calculation_steps": "1×1000=1000",
+      "standard_answer": "1000undefined",
+      "verification": "1000undefined换回立方米等于1立方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1516,7 +1513,10 @@
           "narration": "单位换算,体积/容积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "体积/容积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1537,13 +1537,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "2立方米换算为立方厘米，结果=2000000",
-      "calculation_steps": "2000000立方厘米",
-      "standard_answer": "2000000立方厘米换回立方米等于2立方米",
-      "verification": [
-        "单位换算",
-        "体积/容积"
-      ],
+      "formula_rearrangement": "1立方米=1000000undefined",
+      "calculation_steps": "2×1000000=2000000",
+      "standard_answer": "2000000undefined",
+      "verification": "2000000undefined换回立方米等于2立方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1568,7 +1565,10 @@
           "narration": "单位换算,体积/容积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "体积/容积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1589,13 +1589,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "3立方分米换算为立方厘米，结果=3000",
-      "calculation_steps": "3000立方厘米",
-      "standard_answer": "3000立方厘米换回立方分米等于3立方分米",
-      "verification": [
-        "单位换算",
-        "体积/容积"
-      ],
+      "formula_rearrangement": "1立方分米=1000undefined",
+      "calculation_steps": "3×1000=3000",
+      "standard_answer": "3000undefined",
+      "verification": "3000undefined换回立方分米等于3立方分米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1620,7 +1617,10 @@
           "narration": "单位换算,体积/容积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "体积/容积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1641,13 +1641,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "2升换算为毫升，结果=2000",
-      "calculation_steps": "2000毫升",
-      "standard_answer": "2000毫升换回升等于2升",
-      "verification": [
-        "单位换算",
-        "体积/容积"
-      ],
+      "formula_rearrangement": "1升=1000undefined",
+      "calculation_steps": "2×1000=2000",
+      "standard_answer": "2000undefined",
+      "verification": "2000undefined换回升等于2升",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1672,7 +1669,10 @@
           "narration": "单位换算,体积/容积，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "体积/容积"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1692,13 +1692,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "2小时=120分钟",
-      "calculation_steps": "120分钟",
-      "standard_answer": "120分钟换回小时等于2小时",
-      "verification": [
-        "单位换算",
-        "时间"
-      ],
+      "formula_rearrangement": "1小时=60undefined",
+      "calculation_steps": "2×60=120",
+      "standard_answer": "120undefined",
+      "verification": "120undefined换回小时等于2小时",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1723,7 +1720,10 @@
           "narration": "单位换算,时间，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "时间"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1743,13 +1743,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "180分钟=3小时",
-      "calculation_steps": "3小时",
-      "standard_answer": "3小时换回分钟等于180分钟",
-      "verification": [
-        "单位换算",
-        "时间"
-      ],
+      "formula_rearrangement": "1分钟=0.016666666666666666undefined",
+      "calculation_steps": "180×0.016666666666666666=3",
+      "standard_answer": "3undefined",
+      "verification": "3undefined换回分钟等于180分钟",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1774,7 +1771,10 @@
           "narration": "单位换算,时间，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "时间"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1794,13 +1794,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "3分钟=180秒",
-      "calculation_steps": "180秒",
-      "standard_answer": "180秒换回分钟等于3分钟",
-      "verification": [
-        "单位换算",
-        "时间"
-      ],
+      "formula_rearrangement": "1分钟=60undefined",
+      "calculation_steps": "3×60=180",
+      "standard_answer": "180undefined",
+      "verification": "180undefined换回分钟等于3分钟",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1825,7 +1822,10 @@
           "narration": "单位换算,时间，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "时间"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1845,13 +1845,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "240秒=4分钟",
-      "calculation_steps": "4分钟",
-      "standard_answer": "4分钟换回秒等于240秒",
-      "verification": [
-        "单位换算",
-        "时间"
-      ],
+      "formula_rearrangement": "1秒=0.016666666666666666undefined",
+      "calculation_steps": "240×0.016666666666666666=4",
+      "standard_answer": "4undefined",
+      "verification": "4undefined换回秒等于240秒",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1876,7 +1873,10 @@
           "narration": "单位换算,时间，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "单位换算",
+        "时间"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1898,14 +1898,10 @@
         "多步骤"
       ],
       "formula": "宽=周长÷2−长；面积=长×宽",
-      "formula_rearrangement": "先求宽：30÷2−9=6厘米；再求面积：9×6=54平方厘米",
-      "calculation_steps": "54平方厘米",
-      "standard_answer": "(9+6)×2=30厘米；9×6=54平方厘米",
-      "verification": [
-        "多步骤",
-        "中间量",
-        "几何"
-      ],
+      "formula_rearrangement": "宽=周长÷2−长；面积=长×宽",
+      "calculation_steps": "30÷2−9=6；9×6=54",
+      "standard_answer": "54平方厘米",
+      "verification": "(9+6)×2=30厘米；9×6=54平方厘米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1930,7 +1926,11 @@
           "narration": "多步骤,中间量,几何，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "多步骤",
+        "中间量",
+        "几何"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -1952,14 +1952,10 @@
         "多步骤"
       ],
       "formula": "宽=周长÷2−长；面积=长×宽",
-      "formula_rearrangement": "先求宽：40÷2−12=8厘米；再求面积：12×8=96平方厘米",
-      "calculation_steps": "96平方厘米",
-      "standard_answer": "(12+8)×2=40厘米；12×8=96平方厘米",
-      "verification": [
-        "多步骤",
-        "中间量",
-        "几何"
-      ],
+      "formula_rearrangement": "宽=周长÷2−长；面积=长×宽",
+      "calculation_steps": "40÷2−12=8；12×8=96",
+      "standard_answer": "96平方厘米",
+      "verification": "(12+8)×2=40厘米；12×8=96平方厘米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1984,7 +1980,11 @@
           "narration": "多步骤,中间量,几何，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "多步骤",
+        "中间量",
+        "几何"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -2006,14 +2006,10 @@
         "多步骤"
       ],
       "formula": "宽=周长÷2−长；面积=长×宽",
-      "formula_rearrangement": "先求宽：50÷2−15=10厘米；再求面积：15×10=150平方厘米",
-      "calculation_steps": "150平方厘米",
-      "standard_answer": "(15+10)×2=50厘米；15×10=150平方厘米",
-      "verification": [
-        "多步骤",
-        "中间量",
-        "几何"
-      ],
+      "formula_rearrangement": "宽=周长÷2−长；面积=长×宽",
+      "calculation_steps": "50÷2−15=10；15×10=150",
+      "standard_answer": "150平方厘米",
+      "verification": "(15+10)×2=50厘米；15×10=150平方厘米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -2038,7 +2034,11 @@
           "narration": "多步骤,中间量,几何，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "多步骤",
+        "中间量",
+        "几何"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
@@ -2060,14 +2060,10 @@
         "多步骤"
       ],
       "formula": "宽=周长÷2−长；面积=长×宽",
-      "formula_rearrangement": "先求宽：36÷2−10=8厘米；再求面积：10×8=80平方厘米",
-      "calculation_steps": "80平方厘米",
-      "standard_answer": "(10+8)×2=36厘米；10×8=80平方厘米",
-      "verification": [
-        "多步骤",
-        "中间量",
-        "几何"
-      ],
+      "formula_rearrangement": "宽=周长÷2−长；面积=长×宽",
+      "calculation_steps": "36÷2−10=8；10×8=80",
+      "standard_answer": "80平方厘米",
+      "verification": "(10+8)×2=36厘米；10×8=80平方厘米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -2092,7 +2088,11 @@
           "narration": "多步骤,中间量,几何，结果符合题目条件。"
         }
       ],
-      "tags": [],
+      "tags": [
+        "多步骤",
+        "中间量",
+        "几何"
+      ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
         "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
