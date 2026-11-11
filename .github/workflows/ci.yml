@@ -53,7 +53,7 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379/0
       CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/1
       TTS_PROVIDER: none
-      VIDEO_OUTPUT_DIR: ${{ runner.temp }}/edumotion-renders
+      VIDEO_OUTPUT_DIR: /tmp/edumotion-renders
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
