@@ -1,7 +1,7 @@
 {
   "dataset_id": "primary_math_benchmark_v1",
   "version": "1.0.0",
-  "count": 55,
+  "count": 45,
   "description": "依据中国义务教育数学课程标准整理的原创/改编小学数学回归题。所有题目均标注课程来源；题干不是教材逐字摘录。",
   "sources": [
     {
@@ -223,58 +223,6 @@
       ]
     },
     {
-      "id": "SQ-INV-5",
-      "grade_band": "G3_4",
-      "topic": "正方形面积反求边长",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个正方形面积是100平方厘米，边长是多少？",
-      "known_quantities": "面积=100平方厘米",
-      "target_quantity": "边长（厘米）",
-      "concepts": [
-        "正方形",
-        "面积",
-        "平方根（完全平方数）"
-      ],
-      "formula": "面积=边长×边长",
-      "formula_rearrangement": "边长=√面积",
-      "calculation_steps": "√100=10",
-      "standard_answer": "10厘米",
-      "verification": "10×10=100平方厘米，符合已知面积",
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "面积=100平方厘米",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：正方形、面积、平方根（完全平方数）。关系式：面积=边长×边长。",
-          "narration": "这道题考查正方形、面积、平方根（完全平方数），因此使用面积=边长×边长。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "边长=√面积；代入：√100=10。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：10厘米。验证：10×10=100平方厘米，符合已知面积",
-          "narration": "10×10=100平方厘米，符合已知面积，结果符合题目条件。"
-        }
-      ],
-      "tags": [
-        "逆向求解",
-        "几何"
-      ],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
       "id": "RE-INV-1",
       "grade_band": "G3_4",
       "topic": "长方形面积反求宽",
@@ -471,58 +419,6 @@
           "title": "作答与验证",
           "explanation": "答案：12厘米。验证：10×12=120平方厘米",
           "narration": "10×12=120平方厘米，结果符合题目条件。"
-        }
-      ],
-      "tags": [
-        "逆向求解",
-        "几何"
-      ],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
-      "id": "RE-INV-5",
-      "grade_band": "G3_4",
-      "topic": "长方形面积反求宽",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个长方形面积是150平方厘米，长是15厘米，宽是多少？",
-      "known_quantities": "面积=150平方厘米；长=15厘米",
-      "target_quantity": "宽（厘米）",
-      "concepts": [
-        "长方形",
-        "面积",
-        "公式变形"
-      ],
-      "formula": "面积=长×宽",
-      "formula_rearrangement": "宽=面积÷长",
-      "calculation_steps": "150÷15=10",
-      "standard_answer": "10厘米",
-      "verification": "15×10=150平方厘米",
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "面积=150平方厘米；长=15厘米",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：长方形、面积、公式变形。关系式：面积=长×宽。",
-          "narration": "这道题考查长方形、面积、公式变形，因此使用面积=长×宽。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "宽=面积÷长；代入：150÷15=10。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：10厘米。验证：15×10=150平方厘米",
-          "narration": "15×10=150平方厘米，结果符合题目条件。"
         }
       ],
       "tags": [
@@ -743,58 +639,6 @@
       ]
     },
     {
-      "id": "PRICE-INV-5",
-      "grade_band": "G3_4",
-      "topic": "总价反求数量",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "买文具总价是84元，单价是12元，买了多少支？",
-      "known_quantities": "总价=84元；单价=12元",
-      "target_quantity": "购买数量（支）",
-      "concepts": [
-        "单价",
-        "数量",
-        "总价"
-      ],
-      "formula": "总价=单价×数量",
-      "formula_rearrangement": "数量=总价÷单价",
-      "calculation_steps": "84÷12=7",
-      "standard_answer": "7个/支/本（按题目对象）",
-      "verification": "12×7=84元",
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "总价=84元；单价=12元",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：单价、数量、总价。关系式：总价=单价×数量。",
-          "narration": "这道题考查单价、数量、总价，因此使用总价=单价×数量。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "数量=总价÷单价；代入：84÷12=7。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：7个/支/本（按题目对象）。验证：12×7=84元",
-          "narration": "12×7=84元，结果符合题目条件。"
-        }
-      ],
-      "tags": [
-        "逆向求解",
-        "购物"
-      ],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
       "id": "TRAVEL-INV-1",
       "grade_band": "G4_6",
       "topic": "路程反求时间",
@@ -991,58 +835,6 @@
           "title": "作答与验证",
           "explanation": "答案：4小时。验证：90×4=360千米",
           "narration": "90×4=360千米，结果符合题目条件。"
-        }
-      ],
-      "tags": [
-        "逆向求解",
-        "行程"
-      ],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
-      "id": "TRAVEL-INV-5",
-      "grade_band": "G4_6",
-      "topic": "路程反求时间",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "路程是210千米，速度是70千米/小时，时间是多少小时？",
-      "known_quantities": "路程=210千米；速度=70千米/小时",
-      "target_quantity": "时间（小时）",
-      "concepts": [
-        "路程",
-        "速度",
-        "时间"
-      ],
-      "formula": "路程=速度×时间",
-      "formula_rearrangement": "时间=路程÷速度",
-      "calculation_steps": "210÷70=3",
-      "standard_answer": "3小时",
-      "verification": "70×3=210千米",
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "路程=210千米；速度=70千米/小时",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：路程、速度、时间。关系式：路程=速度×时间。",
-          "narration": "这道题考查路程、速度、时间，因此使用路程=速度×时间。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "时间=路程÷速度；代入：210÷70=3。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：3小时。验证：70×3=210千米",
-          "narration": "70×3=210千米，结果符合题目条件。"
         }
       ],
       "tags": [
@@ -1263,58 +1055,6 @@
       ]
     },
     {
-      "id": "FRAC-WHOLE-5",
-      "grade_band": "G5_6",
-      "topic": "分数应用题反求单位1",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个数的3/4是27，求这个数。",
-      "known_quantities": "对应分率=3/4；部分量=27",
-      "target_quantity": "单位“1”的整体量",
-      "concepts": [
-        "分数应用题",
-        "单位“1”",
-        "对应分率"
-      ],
-      "formula": "部分量=单位“1”×对应分率",
-      "formula_rearrangement": "单位“1”=部分量÷对应分率",
-      "calculation_steps": "27÷(3/4)=36",
-      "standard_answer": "36",
-      "verification": "36×3/4=27",
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "对应分率=3/4；部分量=27",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：分数应用题、单位“1”、对应分率。关系式：部分量=单位“1”×对应分率。",
-          "narration": "这道题考查分数应用题、单位“1”、对应分率，因此使用部分量=单位“1”×对应分率。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "单位“1”=部分量÷对应分率；代入：27÷(3/4)=36。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：36。验证：36×3/4=27",
-          "narration": "36×3/4=27，结果符合题目条件。"
-        }
-      ],
-      "tags": [
-        "分数",
-        "反向求整体"
-      ],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
       "id": "PCT-WHOLE-1",
       "grade_band": "G5_6",
       "topic": "百分数应用题反求单位1",
@@ -1511,58 +1251,6 @@
           "title": "作答与验证",
           "explanation": "答案：150。验证：150×10%=15",
           "narration": "150×10%=15，结果符合题目条件。"
-        }
-      ],
-      "tags": [
-        "百分数",
-        "反向求整体"
-      ],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
-      "id": "PCT-WHOLE-5",
-      "grade_band": "G5_6",
-      "topic": "百分数应用题反求单位1",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个数的50%是45，求这个数。",
-      "known_quantities": "对应百分率=50%；部分量=45",
-      "target_quantity": "单位“1”的整体量",
-      "concepts": [
-        "百分数",
-        "单位“1”",
-        "基准量"
-      ],
-      "formula": "部分量=整体量×百分率",
-      "formula_rearrangement": "整体量=部分量÷百分率",
-      "calculation_steps": "45÷0.5=90",
-      "standard_answer": "90",
-      "verification": "90×50%=45",
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "对应百分率=50%；部分量=45",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：百分数、单位“1”、基准量。关系式：部分量=整体量×百分率。",
-          "narration": "这道题考查百分数、单位“1”、基准量，因此使用部分量=整体量×百分率。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "整体量=部分量÷百分率；代入：45÷0.5=90。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：90。验证：90×50%=45",
-          "narration": "90×50%=45，结果符合题目条件。"
         }
       ],
       "tags": [
@@ -1783,58 +1471,6 @@
       ]
     },
     {
-      "id": "AREA-UNIT-5",
-      "grade_band": "G4_6",
-      "topic": "面积单位换算",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "2500平方厘米等于多少平方分米？",
-      "known_quantities": "2500平方厘米",
-      "target_quantity": "目标面积单位数量",
-      "concepts": [
-        "面积单位",
-        "换算进率",
-        "平方关系"
-      ],
-      "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方厘米=0.01平方分米；2500×0.01=25",
-      "calculation_steps": "25平方分米",
-      "standard_answer": "25平方分米换回平方厘米等于2500平方厘米",
-      "verification": [
-        "单位换算",
-        "面积"
-      ],
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "2500平方厘米",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：面积单位、换算进率、平方关系。关系式：按面积单位间的平方进率换算。",
-          "narration": "这道题考查面积单位、换算进率、平方关系，因此使用按面积单位间的平方进率换算。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "1平方厘米=0.01平方分米；2500×0.01=25；代入：25平方分米。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：25平方分米换回平方厘米等于2500平方厘米。验证：单位换算,面积",
-          "narration": "单位换算,面积，结果符合题目条件。"
-        }
-      ],
-      "tags": [],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
       "id": "VOL-UNIT-1",
       "grade_band": "G5_6",
       "topic": "体积容积单位换算",
@@ -2043,58 +1679,6 @@
       ]
     },
     {
-      "id": "VOL-UNIT-5",
-      "grade_band": "G5_6",
-      "topic": "体积容积单位换算",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "1500毫升等于多少升？",
-      "known_quantities": "1500毫升",
-      "target_quantity": "目标体积或容积单位数量",
-      "concepts": [
-        "体积单位",
-        "容积单位",
-        "立方进率"
-      ],
-      "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "1500毫升换算为升，结果=1.5",
-      "calculation_steps": "1.5升",
-      "standard_answer": "1.5升换回毫升等于1500毫升",
-      "verification": [
-        "单位换算",
-        "体积/容积"
-      ],
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "1500毫升",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：体积单位、容积单位、立方进率。关系式：按体积或容积单位进率换算。",
-          "narration": "这道题考查体积单位、容积单位、立方进率，因此使用按体积或容积单位进率换算。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "1500毫升换算为升，结果=1.5；代入：1.5升。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：1.5升换回毫升等于1500毫升。验证：单位换算,体积/容积",
-          "narration": "单位换算,体积/容积，结果符合题目条件。"
-        }
-      ],
-      "tags": [],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
       "id": "TIME-UNIT-1",
       "grade_band": "G2_4",
       "topic": "时间单位换算",
@@ -2289,57 +1873,6 @@
         {
           "title": "作答与验证",
           "explanation": "答案：4分钟换回秒等于240秒。验证：单位换算,时间",
-          "narration": "单位换算,时间，结果符合题目条件。"
-        }
-      ],
-      "tags": [],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
-      "id": "TIME-UNIT-5",
-      "grade_band": "G2_4",
-      "topic": "时间单位换算",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "1.5小时换算成分钟是多少？",
-      "known_quantities": "1.5小时",
-      "target_quantity": "目标时间单位数量",
-      "concepts": [
-        "时间单位",
-        "六十进制进率"
-      ],
-      "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "1.5小时=90分钟",
-      "calculation_steps": "90分钟",
-      "standard_answer": "90分钟换回小时等于1.5小时",
-      "verification": [
-        "单位换算",
-        "时间"
-      ],
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "1.5小时",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：时间单位、六十进制进率。关系式：1小时=60分钟；1分钟=60秒。",
-          "narration": "这道题考查时间单位、六十进制进率，因此使用1小时=60分钟；1分钟=60秒。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "1.5小时=90分钟；代入：90分钟。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：90分钟换回小时等于1.5小时。验证：单位换算,时间",
           "narration": "单位换算,时间，结果符合题目条件。"
         }
       ],
@@ -2566,88 +2099,34 @@
       ]
     },
     {
-      "id": "MULTI-RECT-5",
-      "grade_band": "G4_6",
-      "topic": "长方形周长求面积两步题",
-      "difficulty": "基础",
-      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个长方形周长是44厘米，长是14厘米，求面积。",
-      "known_quantities": "周长=44厘米；长=14厘米",
-      "target_quantity": "长方形面积",
-      "concepts": [
-        "长方形周长",
-        "先求宽",
-        "长方形面积",
-        "多步骤"
-      ],
-      "formula": "宽=周长÷2−长；面积=长×宽",
-      "formula_rearrangement": "先求宽：44÷2−14=8厘米；再求面积：14×8=112平方厘米",
-      "calculation_steps": "112平方厘米",
-      "standard_answer": "(14+8)×2=44厘米；14×8=112平方厘米",
-      "verification": [
-        "多步骤",
-        "中间量",
-        "几何"
-      ],
-      "verification_status": "verified",
-      "verification_reason": "将计算结果代回原关系式，能还原已知量。",
-      "solution_steps": [
-        {
-          "title": "读题与提取条件",
-          "explanation": "周长=44厘米；长=14厘米",
-          "narration": "先圈出题目中的已知量，注意每个数值代表什么。"
-        },
-        {
-          "title": "建立数量关系",
-          "explanation": "知识点：长方形周长、先求宽、长方形面积、多步骤。关系式：宽=周长÷2−长；面积=长×宽。",
-          "narration": "这道题考查长方形周长、先求宽、长方形面积、多步骤，因此使用宽=周长÷2−长；面积=长×宽。"
-        },
-        {
-          "title": "变形与计算",
-          "explanation": "先求宽：44÷2−14=8厘米；再求面积：14×8=112平方厘米；代入：112平方厘米。",
-          "narration": "先把公式整理成要求的量，再代入已知数据计算。"
-        },
-        {
-          "title": "作答与验证",
-          "explanation": "答案：(14+8)×2=44厘米；14×8=112平方厘米。验证：多步骤,中间量,几何",
-          "narration": "多步骤,中间量,几何，结果符合题目条件。"
-        }
-      ],
-      "tags": [],
-      "source_refs": [
-        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
-        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
-      ]
-    },
-    {
-      "id": "BAD-01",
+      "id": "BAD-06",
       "grade_band": "G1_6",
       "topic": "信息不足与干扰题",
       "difficulty": "干扰/条件检查",
       "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个三角形底是8厘米，面积是多少？",
-      "known_quantities": "底=8厘米；缺少对应高",
-      "target_quantity": "三角形面积",
+      "problem": "一辆汽车行驶了180千米，速度是多少？",
+      "known_quantities": "路程=180千米；缺少行驶时间",
+      "target_quantity": "速度",
       "concepts": [
         "条件识别",
         "拒绝猜测"
       ],
-      "formula": "三角形面积=底×高÷2",
+      "formula": "速度=路程÷时间",
       "formula_rearrangement": "不进行公式代入",
       "calculation_steps": "",
       "standard_answer": null,
-      "verification": "缺少高，无法唯一确定面积",
+      "verification": "缺少时间，不能计算速度",
       "verification_status": "unverified",
-      "verification_reason": "缺少高，无法唯一确定面积",
+      "verification_reason": "缺少时间，不能计算速度",
       "solution_steps": [
         {
           "title": "读题与提取条件",
-          "explanation": "底=8厘米；缺少对应高",
+          "explanation": "路程=180千米；缺少行驶时间",
           "narration": "先整理题目已知条件。"
         },
         {
           "title": "检查必要信息",
-          "explanation": "缺少高，无法唯一确定面积",
+          "explanation": "缺少时间，不能计算速度",
           "narration": "检查是否具备求解所需的全部条件。"
         },
         {
@@ -2657,8 +2136,8 @@
         }
       ],
       "tags": [
-        "缺少条件",
-        "几何"
+        "干扰题",
+        "条件检查"
       ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
@@ -2666,34 +2145,34 @@
       ]
     },
     {
-      "id": "BAD-02",
+      "id": "BAD-07",
       "grade_band": "G1_6",
       "topic": "信息不足与干扰题",
       "difficulty": "干扰/条件检查",
       "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个正方形面积是64，边长和周长分别是多少？",
-      "known_quantities": "面积=64；未说明面积单位（可求数值，但单位不明）",
-      "target_quantity": "边长与周长的单位",
+      "problem": "一个数的三分之一比另一个数多5，求这个数。",
+      "known_quantities": "关系中有两个未知量且缺少具体条件",
+      "target_quantity": "未知数",
       "concepts": [
         "条件识别",
         "拒绝猜测"
       ],
-      "formula": "边长=√面积；周长=4×边长",
+      "formula": "需建立完整方程或补充条件",
       "formula_rearrangement": "不进行公式代入",
       "calculation_steps": "",
       "standard_answer": null,
-      "verification": "数值可推导但长度单位未知，答案单位不完整",
+      "verification": "条件不足，不能唯一确定答案",
       "verification_status": "unverified",
-      "verification_reason": "数值可推导但长度单位未知，答案单位不完整",
+      "verification_reason": "条件不足，不能唯一确定答案",
       "solution_steps": [
         {
           "title": "读题与提取条件",
-          "explanation": "面积=64；未说明面积单位（可求数值，但单位不明）",
+          "explanation": "关系中有两个未知量且缺少具体条件",
           "narration": "先整理题目已知条件。"
         },
         {
           "title": "检查必要信息",
-          "explanation": "数值可推导但长度单位未知，答案单位不完整",
+          "explanation": "条件不足，不能唯一确定答案",
           "narration": "检查是否具备求解所需的全部条件。"
         },
         {
@@ -2703,7 +2182,8 @@
         }
       ],
       "tags": [
-        "单位缺失"
+        "干扰题",
+        "条件检查"
       ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
@@ -2711,34 +2191,34 @@
       ]
     },
     {
-      "id": "BAD-03",
+      "id": "BAD-08",
       "grade_band": "G1_6",
       "topic": "信息不足与干扰题",
       "difficulty": "干扰/条件检查",
       "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "3米等于多少平方米？",
-      "known_quantities": "原单位=米；目标单位=平方米",
-      "target_quantity": "不能直接换算",
+      "problem": "一件商品先涨价20%，再降价20%，现价是多少？",
+      "known_quantities": "缺少原价；且涨跌基准量不同",
+      "target_quantity": "最终价格",
       "concepts": [
         "条件识别",
         "拒绝猜测"
       ],
-      "formula": "长度单位与面积单位量纲不同",
+      "formula": "先按原价乘1.2，再按涨价后价格乘0.8",
       "formula_rearrangement": "不进行公式代入",
       "calculation_steps": "",
       "standard_answer": null,
-      "verification": "长度与面积不能直接换算",
+      "verification": "缺少原价，无法给出具体金额",
       "verification_status": "unverified",
-      "verification_reason": "长度与面积不能直接换算",
+      "verification_reason": "缺少原价，无法给出具体金额",
       "solution_steps": [
         {
           "title": "读题与提取条件",
-          "explanation": "原单位=米；目标单位=平方米",
+          "explanation": "缺少原价；且涨跌基准量不同",
           "narration": "先整理题目已知条件。"
         },
         {
           "title": "检查必要信息",
-          "explanation": "长度与面积不能直接换算",
+          "explanation": "缺少原价，无法给出具体金额",
           "narration": "检查是否具备求解所需的全部条件。"
         },
         {
@@ -2748,8 +2228,8 @@
         }
       ],
       "tags": [
-        "量纲冲突",
-        "干扰"
+        "干扰题",
+        "条件检查"
       ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
@@ -2757,34 +2237,34 @@
       ]
     },
     {
-      "id": "BAD-04",
+      "id": "BAD-09",
       "grade_band": "G1_6",
       "topic": "信息不足与干扰题",
       "difficulty": "干扰/条件检查",
       "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "一个长方形周长是30厘米，面积是多少？",
-      "known_quantities": "周长=30厘米；缺少长或宽",
-      "target_quantity": "长方形面积",
+      "problem": "一个长方体体积是120立方厘米，长是10厘米，求表面积。",
+      "known_quantities": "体积=120立方厘米；长=10厘米；缺少宽或高",
+      "target_quantity": "表面积",
       "concepts": [
         "条件识别",
         "拒绝猜测"
       ],
-      "formula": "周长=2×(长+宽)；面积=长×宽",
+      "formula": "V=长×宽×高；S=2(长宽+长高+宽高)",
       "formula_rearrangement": "不进行公式代入",
       "calculation_steps": "",
       "standard_answer": null,
-      "verification": "仅有周长不能确定唯一面积",
+      "verification": "宽和高均未知，表面积不能唯一确定",
       "verification_status": "unverified",
-      "verification_reason": "仅有周长不能确定唯一面积",
+      "verification_reason": "宽和高均未知，表面积不能唯一确定",
       "solution_steps": [
         {
           "title": "读题与提取条件",
-          "explanation": "周长=30厘米；缺少长或宽",
+          "explanation": "体积=120立方厘米；长=10厘米；缺少宽或高",
           "narration": "先整理题目已知条件。"
         },
         {
           "title": "检查必要信息",
-          "explanation": "仅有周长不能确定唯一面积",
+          "explanation": "宽和高均未知，表面积不能唯一确定",
           "narration": "检查是否具备求解所需的全部条件。"
         },
         {
@@ -2794,8 +2274,8 @@
         }
       ],
       "tags": [
-        "缺少条件",
-        "几何"
+        "干扰题",
+        "条件检查"
       ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
@@ -2803,34 +2283,34 @@
       ]
     },
     {
-      "id": "BAD-05",
+      "id": "BAD-10",
       "grade_band": "G1_6",
       "topic": "信息不足与干扰题",
       "difficulty": "干扰/条件检查",
       "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
-      "problem": "小明比小红多一些苹果，两人一共有多少个？",
-      "known_quantities": "只有大小关系，没有具体数量",
-      "target_quantity": "苹果总数",
+      "problem": "小明走了2小时，路程是12千米，求速度，单位写成平方米。",
+      "known_quantities": "时间=2小时；路程=12千米；目标单位平方米与速度量纲不符",
+      "target_quantity": "速度（千米/小时）",
       "concepts": [
         "条件识别",
         "拒绝猜测"
       ],
-      "formula": "总数=小明数量+小红数量",
+      "formula": "速度=路程÷时间",
       "formula_rearrangement": "不进行公式代入",
       "calculation_steps": "",
       "standard_answer": null,
-      "verification": "缺少两人的具体数量，无法计算",
+      "verification": "目标单位平方米是面积单位，不是速度单位",
       "verification_status": "unverified",
-      "verification_reason": "缺少两人的具体数量，无法计算",
+      "verification_reason": "目标单位平方米是面积单位，不是速度单位",
       "solution_steps": [
         {
           "title": "读题与提取条件",
-          "explanation": "只有大小关系，没有具体数量",
+          "explanation": "时间=2小时；路程=12千米；目标单位平方米与速度量纲不符",
           "narration": "先整理题目已知条件。"
         },
         {
           "title": "检查必要信息",
-          "explanation": "缺少两人的具体数量，无法计算",
+          "explanation": "目标单位平方米是面积单位，不是速度单位",
           "narration": "检查是否具备求解所需的全部条件。"
         },
         {
@@ -2840,8 +2320,8 @@
         }
       ],
       "tags": [
-        "缺少条件",
-        "关键词干扰"
+        "干扰题",
+        "条件检查"
       ],
       "source_refs": [
         "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
