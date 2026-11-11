@@ -39,123 +39,112 @@ jobs:
 
   async-video-e2e:
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
-    env:
-      REDIS_URL: redis://127.0.0.1:6379/0
-      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/1
-      TTS_PROVIDER: none
-      VIDEO_OUTPUT_DIR: /tmp/edumotion-renders
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Validate Docker Compose configuration
+      - name: Prepare test environment and validate Compose configuration
         run: |
           cp .env.example .env
+          sed -i 's/^TTS_PROVIDER=edge$/TTS_PROVIDER=none/' .env
           docker compose -f backend/docker-compose.yml config --quiet
-      - name: Install FFmpeg and CJK fonts
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
-      - name: Install backend dependencies
-        run: pip install -r requirements.txt
-        working-directory: backend
-      - name: Exercise live Redis, Celery, API, MP4 download and audio mux
-        working-directory: backend
+      - name: Build and start Redis, API and Celery Worker with Docker Compose
+        run: docker compose -f backend/docker-compose.yml up --build -d
+      - name: Submit Chinese math problem and verify async MP4 generation/download
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$VIDEO_OUTPUT_DIR"
-          celery -A app.celery_app:celery_app worker --loglevel=info --pool=solo --concurrency=1 > "$RUNNER_TEMP/worker.log" 2>&1 &
-          WORKER_PID=$!
-          uvicorn app.main:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/api.log" 2>&1 &
-          API_PID=$!
-          cleanup() {
-            kill "$API_PID" "$WORKER_PID" 2>/dev/null || true
-            wait "$API_PID" "$WORKER_PID" 2>/dev/null || true
-            echo "--- Celery worker log ---"
-            cat "$RUNNER_TEMP/worker.log" || true
-            echo "--- API log ---"
-            cat "$RUNNER_TEMP/api.log" || true
-          }
-          trap cleanup EXIT
           python - <<'PY'
-          import os
+          import json
           import pathlib
-          import subprocess
           import time
-
-          import httpx
+          import urllib.error
+          import urllib.parse
+          import urllib.request
 
           base = "http://127.0.0.1:8000"
-          with httpx.Client(timeout=20) as client:
-              for _ in range(60):
-                  try:
-                      health = client.get(base + "/api/v1/health")
-                      if health.status_code == 200:
-                          break
-                  except httpx.HTTPError:
-                      pass
-                  time.sleep(1)
-              else:
-                  raise RuntimeError("API did not become healthy")
 
-              question = "一个长方形长 8 厘米、宽 5 厘米，面积是多少？"
-              submitted = client.post(
-                  base + "/api/v1/problems/video",
-                  data={"text": question},
-              )
-              assert submitted.status_code == 202, submitted.text
-              job_id = submitted.json()["job_id"]
+          def request(path, data=None):
+              body = urllib.parse.urlencode(data).encode() if data is not None else None
+              headers = {"Content-Type": "application/x-www-form-urlencoded"} if body is not None else {}
+              req = urllib.request.Request(base + path, data=body, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      return response.status, response.headers, response.read()
+              except urllib.error.HTTPError as error:
+                  return error.code, error.headers, error.read()
 
-              deadline = time.monotonic() + 180
-              while time.monotonic() < deadline:
-                  response = client.get(base + f"/api/v1/problems/jobs/{job_id}")
-                  assert response.status_code == 200, response.text
-                  job = response.json()
-                  if job["status"] == "failed":
-                      raise RuntimeError(job.get("error") or "video task failed")
-                  if job["status"] == "completed":
-                      break
-                  time.sleep(0.5)
-              else:
-                  raise TimeoutError("video job did not complete within 180 seconds")
+          for _ in range(90):
+              status, _, body = request("/api/v1/health")
+              if status == 200:
+                  break
+              time.sleep(1)
+          else:
+              raise RuntimeError("Docker Compose API did not become healthy")
 
-              result = job["result"]
-              assert result["answer"] == "40平方单位", result
-              assert result["verification_status"] == "verified", result
-              assert result["audio_status"] == "disabled", result
+          question = "一个长方形长 8 厘米、宽 5 厘米，面积是多少？"
+          status, _, body = request("/api/v1/problems/video", {"text": question})
+          assert status == 202, body.decode(errors="replace")
+          job_id = json.loads(body)["job_id"]
 
-              downloaded = client.get(base + job["video_url"])
-              assert downloaded.status_code == 200, downloaded.text
-              assert downloaded.headers["content-type"].startswith("video/mp4")
-              assert len(downloaded.content) > 1000
-              video_file = pathlib.Path(os.environ["VIDEO_OUTPUT_DIR"]) / f"{job_id}.mp4"
-              assert video_file.is_file() and video_file.stat().st_size > 1000
+          deadline = time.monotonic() + 180
+          while time.monotonic() < deadline:
+              status, _, body = request(f"/api/v1/problems/jobs/{job_id}")
+              assert status == 200, body.decode(errors="replace")
+              job = json.loads(body)
+              if job["status"] == "failed":
+                  raise RuntimeError(job.get("error") or "Docker Celery task failed")
+              if job["status"] == "completed":
+                  break
+              time.sleep(0.5)
+          else:
+              raise TimeoutError("Docker Compose video job did not complete within 180 seconds")
 
-          # Exercise ffmpeg/ffprobe audio mux and duration matching independently
-          # of the external Edge TTS service.
-          audio_file = pathlib.Path(os.environ["RUNNER_TEMP"]) / "sync-tone.mp3"
-          subprocess.run(
-              [
-                  "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-                  "-f", "lavfi", "-i", "sine=frequency=440:duration=1.5",
-                  "-q:a", "3", str(audio_file),
-              ],
-              check=True,
-          )
+          result = job["result"]
+          assert result["answer"] == "40平方单位", result
+          assert result["verification_status"] == "verified", result
+          assert result["audio_status"] == "disabled", result
+
+          status, headers, video = request(job["video_url"])
+          assert status == 200, video[:500]
+          assert headers.get_content_type() == "video/mp4"
+          assert len(video) > 1000
+          host_video = pathlib.Path("data/renders") / f"{job_id}.mp4"
+          assert host_video.is_file() and host_video.stat().st_size > 1000
+          print(f"Docker Compose job {job_id} completed; MP4 download returned {len(video)} bytes.")
+          PY
+      - name: Verify all Compose services and worker startup
+        run: |
+          docker compose -f backend/docker-compose.yml ps
+          docker compose -f backend/docker-compose.yml logs --tail=80 worker
+          docker compose -f backend/docker-compose.yml ps --format json | python -c '
+          import json, sys
+          rows = [json.loads(line) for line in sys.stdin if line.strip()]
+          states = {row["Service"]: row["State"] for row in rows}
+          assert states.get("redis") == "running", states
+          assert states.get("api") == "running", states
+          assert states.get("worker") == "running", states
+          '
+          docker compose -f backend/docker-compose.yml logs worker | grep -q "ready."
+      - name: Verify FFmpeg audio mux and ffprobe duration inside API container
+        run: |
+          docker compose -f backend/docker-compose.yml exec -T api python - <<'PY'
+          import pathlib
+          import subprocess
 
           from app.render.video_renderer import render_explanation_video
           from app.schemas.problem import ExplanationScene
 
+          audio = pathlib.Path("/tmp/sync-tone.mp3")
+          subprocess.run(
+              [
+                  "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                  "-f", "lavfi", "-i", "sine=frequency=440:duration=1.5",
+                  "-q:a", "3", str(audio),
+              ],
+              check=True,
+          )
           scene = ExplanationScene(
               id="sync-scene",
               title="音画同步测试",
@@ -163,16 +152,13 @@ jobs:
               visual="answer",
               visual_text="1 + 1 = 2",
           )
-          muxed = render_explanation_video(
-              "sync-check",
-              [scene],
-              audio_path=audio_file,
-              scene_durations=[1.5],
+          output = render_explanation_video(
+              "sync-check", [scene], audio_path=audio, scene_durations=[1.5]
           )
           streams = subprocess.run(
               [
                   "ffprobe", "-v", "error", "-show_entries", "stream=codec_type",
-                  "-of", "csv=p=0", str(muxed),
+                  "-of", "csv=p=0", str(output),
               ],
               capture_output=True, text=True, check=True,
           ).stdout.splitlines()
@@ -180,10 +166,16 @@ jobs:
           duration = float(subprocess.run(
               [
                   "ffprobe", "-v", "error", "-show_entries", "format=duration",
-                  "-of", "default=noprint_wrappers=1:nokey=1", str(muxed),
+                  "-of", "default=noprint_wrappers=1:nokey=1", str(output),
               ],
               capture_output=True, text=True, check=True,
           ).stdout.strip())
           assert abs(duration - 1.5) <= 0.35, duration
-          print("Live async video pipeline and synthetic audio mux smoke test passed.")
+          print(f"MP4 contains audio/video streams; ffprobe duration={duration:.3f}s.")
           PY
+      - name: Print Compose logs on failure
+        if: failure()
+        run: docker compose -f backend/docker-compose.yml logs --tail=150
+      - name: Stop Compose stack
+        if: always()
+        run: docker compose -f backend/docker-compose.yml down -v
