@@ -118,10 +118,10 @@ def _local_solution(problem: str) -> SolvedProblem:
 
     # --- Semantic, inverse and unit-aware rules (run before positional fallbacks). ---
     def labeled(label: str):
-        match = re.search(rf"{label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
+        match = re.search(rf"(?<!周){label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
         return float(match.group(1)) if match else None
 
-    if "正方形" in text and "面积" in text and re.search(r"边长.*多少|求.*边长", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
+    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算)边长|边长是多少", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
         return SolvedProblem(
             answer=None, verification_status="unverified",
             explanation="题目没有说明面积单位，无法给出完整的长度单位答案。",
@@ -133,7 +133,7 @@ def _local_solution(problem: str) -> SolvedProblem:
         )
 
     # Reverse geometry: known area and one dimension.
-    if "正方形" in text and "面积" in text and re.search(r"边长.*多少|求.*边长", text):
+    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算)边长|边长是多少", text):
         area = labeled("面积")
         if area is not None and area >= 0:
             side = math.sqrt(area)
@@ -227,7 +227,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Fraction word problems: explicitly identify the whole and the fraction.
-    fraction_match = re.search(r"(?:一个数|这本书|全程|全班|总数|原有量)?的?(\d+)\\s*/\\s*(\d+)是(\d+(?:\.\d+)?)", text)
+    fraction_match = re.search(r"(?:一个数|这本书|全程|全班|总数|原有量)?的?(\d+)\s*/\s*(\d+)是(\d+(?:\.\d+)?)", text)
     if fraction_match and re.search(r"这个数|原来|总数|全程|一共|整体", text):
         numerator, denominator, part = map(float, fraction_match.groups())
         if denominator > 0 and 0 < numerator <= denominator:
@@ -257,7 +257,7 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Direct fraction/percentage of an explicitly named whole.
-    direct_fraction = re.search(r"(\d+(?:\.\d+)?)的(\d+)\\s*/\\s*(\d+)(?:是多少|是几)", text)
+    direct_fraction = re.search(r"(\d+(?:\.\d+)?)的(\d+)\s*/\s*(\d+)(?:是多少|是几)", text)
     if direct_fraction:
         whole, numerator, denominator = map(float, direct_fraction.groups())
         if denominator > 0 and 0 <= numerator <= denominator:
@@ -279,7 +279,7 @@ def _local_solution(problem: str) -> SolvedProblem:
         "time": {"小时":3600.0,"分钟":60.0,"秒":1.0},
         "mass": {"吨":1000.0,"千克":1.0,"公斤":1.0,"克":0.001},
     }
-    conversion_match = re.search(r"(\d+(?:\.\d+)?)\\s*(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
+    conversion_match = re.search(r"(\d+(?:\.\d+)?)\s*(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
     target_match = re.search(r"(?:换算成|化成|等于多少|是多少)(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
     if conversion_match and target_match:
         amount = float(conversion_match.group(1))
@@ -680,7 +680,7 @@ async def solve_problem(problem: str) -> SolvedProblem:
 
 def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationScene]:
     visual_types = ["highlight", "step", "answer", "check"]
-    compact = re.sub(r"\\s+", "", original_text)
+    compact = re.sub(r"\s+", "", original_text)
     if "正方形" in compact:
         knowledge_visual = "knowledge_square"
     elif "长方形" in compact:
