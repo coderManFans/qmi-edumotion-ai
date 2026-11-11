@@ -84,6 +84,8 @@ Compose 会启动 Redis、API 和 Celery Worker。API 暴露在 http://localhost
     cd backend
     pytest
 
+GitHub Actions 还会启动临时 Redis、Celery Worker 和 FastAPI，使用本地规则题目执行一次真实异步 MP4 生成与下载，并用合成音频检查 FFmpeg/ffprobe 音画合成时长。该 CI 烟测将 TTS_PROVIDER 设为 none，不会冒充真实 Edge TTS 外网测试；Edge TTS 仍需在可访问外网的部署环境单独验证。
+
 ## 设计文档
 
 - [产品需求规格](docs/PRODUCT_SPEC.md)
