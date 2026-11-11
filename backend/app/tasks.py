@@ -15,7 +15,7 @@ def generate_problem_video_task(self, job_id: str, problem_text: str, source_typ
     solution = asyncio.run(solve_problem(problem_text))
     scenes = to_scenes(solution, problem_text)
 
-    self.update_state(state="PROGRESS", meta={"progress": 25, "stage": "解题完成，正在合成中文语音"})
+    solve_stage = "解题步骤已生成" if solution.verification_status == "verified" else "已生成分析草稿，答案尚未验证"\n    self.update_state(state="PROGRESS", meta={"progress": 25, "stage": f"{solve_stage}，正在合成中文语音"})
     with tempfile.TemporaryDirectory(prefix=f"edumotion-tts-{job_id[:8]}-") as temp_dir:
         audio_path, durations = synthesize_scene_audio_sync(scenes, Path(temp_dir))
         self.update_state(state="PROGRESS", meta={"progress": 60, "stage": "中文配音完成，正在绘制动画画面"})
