@@ -1277,10 +1277,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方米=10000undefined",
+      "formula_rearrangement": "1平方米=10000平方厘米",
       "calculation_steps": "2×10000=20000",
-      "standard_answer": "20000undefined",
-      "verification": "20000undefined换回平方米等于2平方米",
+      "standard_answer": "20000平方厘米",
+      "verification": "20000平方厘米换回平方米等于2平方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1329,10 +1329,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方米=100undefined",
+      "formula_rearrangement": "1平方米=100平方分米",
       "calculation_steps": "3×100=300",
-      "standard_answer": "300undefined",
-      "verification": "300undefined换回平方米等于3平方米",
+      "standard_answer": "300平方分米",
+      "verification": "300平方分米换回平方米等于3平方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1381,10 +1381,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1公顷=10000undefined",
+      "formula_rearrangement": "1公顷=10000平方米",
       "calculation_steps": "5×10000=50000",
-      "standard_answer": "50000undefined",
-      "verification": "50000undefined换回公顷等于5公顷",
+      "standard_answer": "50000平方米",
+      "verification": "50000平方米换回公顷等于5公顷",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1433,10 +1433,10 @@
         "平方关系"
       ],
       "formula": "按面积单位间的平方进率换算",
-      "formula_rearrangement": "1平方千米=100undefined",
+      "formula_rearrangement": "1平方千米=100公顷",
       "calculation_steps": "4×100=400",
-      "standard_answer": "400undefined",
-      "verification": "400undefined换回平方千米等于4平方千米",
+      "standard_answer": "400公顷",
+      "verification": "400公顷换回平方千米等于4平方千米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1485,10 +1485,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "1立方米=1000undefined",
+      "formula_rearrangement": "1立方米=1000立方分米",
       "calculation_steps": "1×1000=1000",
-      "standard_answer": "1000undefined",
-      "verification": "1000undefined换回立方米等于1立方米",
+      "standard_answer": "1000立方分米",
+      "verification": "1000立方分米换回立方米等于1立方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1537,10 +1537,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "1立方米=1000000undefined",
+      "formula_rearrangement": "1立方米=1000000立方厘米",
       "calculation_steps": "2×1000000=2000000",
-      "standard_answer": "2000000undefined",
-      "verification": "2000000undefined换回立方米等于2立方米",
+      "standard_answer": "2000000立方厘米",
+      "verification": "2000000立方厘米换回立方米等于2立方米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1589,10 +1589,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "1立方分米=1000undefined",
+      "formula_rearrangement": "1立方分米=1000立方厘米",
       "calculation_steps": "3×1000=3000",
-      "standard_answer": "3000undefined",
-      "verification": "3000undefined换回立方分米等于3立方分米",
+      "standard_answer": "3000立方厘米",
+      "verification": "3000立方厘米换回立方分米等于3立方分米",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1641,10 +1641,10 @@
         "立方进率"
       ],
       "formula": "按体积或容积单位进率换算",
-      "formula_rearrangement": "1升=1000undefined",
+      "formula_rearrangement": "1升=1000毫升",
       "calculation_steps": "2×1000=2000",
-      "standard_answer": "2000undefined",
-      "verification": "2000undefined换回升等于2升",
+      "standard_answer": "2000毫升",
+      "verification": "2000毫升换回升等于2升",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1692,10 +1692,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "1小时=60undefined",
+      "formula_rearrangement": "1小时=60分钟",
       "calculation_steps": "2×60=120",
-      "standard_answer": "120undefined",
-      "verification": "120undefined换回小时等于2小时",
+      "standard_answer": "120分钟",
+      "verification": "120分钟换回小时等于2小时",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1743,10 +1743,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "1分钟=0.016666666666666666undefined",
+      "formula_rearrangement": "1分钟=0.016666666666666666小时",
       "calculation_steps": "180×0.016666666666666666=3",
-      "standard_answer": "3undefined",
-      "verification": "3undefined换回分钟等于180分钟",
+      "standard_answer": "3小时",
+      "verification": "3小时换回分钟等于180分钟",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1794,10 +1794,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "1分钟=60undefined",
+      "formula_rearrangement": "1分钟=60秒",
       "calculation_steps": "3×60=180",
-      "standard_answer": "180undefined",
-      "verification": "180undefined换回分钟等于3分钟",
+      "standard_answer": "180秒",
+      "verification": "180秒换回分钟等于3分钟",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
@@ -1845,10 +1845,10 @@
         "六十进制进率"
       ],
       "formula": "1小时=60分钟；1分钟=60秒",
-      "formula_rearrangement": "1秒=0.016666666666666666undefined",
+      "formula_rearrangement": "1秒=0.016666666666666666分钟",
       "calculation_steps": "240×0.016666666666666666=4",
-      "standard_answer": "4undefined",
-      "verification": "4undefined换回秒等于240秒",
+      "standard_answer": "4分钟",
+      "verification": "4分钟换回秒等于240秒",
       "verification_status": "verified",
       "verification_reason": "将计算结果代回原关系式，能还原已知量。",
       "solution_steps": [
