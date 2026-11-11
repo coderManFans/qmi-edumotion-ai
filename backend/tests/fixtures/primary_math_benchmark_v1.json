@@ -1,7 +1,7 @@
 {
   "dataset_id": "primary_math_benchmark_v1",
   "version": "1.0.0",
-  "count": 45,
+  "count": 50,
   "description": "依据中国义务教育数学课程标准整理的原创/改编小学数学回归题。所有题目均标注课程来源；题干不是教材逐字摘录。",
   "sources": [
     {
@@ -2311,6 +2311,236 @@
         {
           "title": "检查必要信息",
           "explanation": "目标单位平方米是面积单位，不是速度单位",
+          "narration": "检查是否具备求解所需的全部条件。"
+        },
+        {
+          "title": "结论",
+          "explanation": "条件不足或量纲冲突，不能可靠计算。",
+          "narration": "目前不能给出可靠答案，不会自行补造条件。"
+        }
+      ],
+      "tags": [
+        "干扰题",
+        "条件检查"
+      ],
+      "source_refs": [
+        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
+        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
+      ]
+    },
+    {
+      "id": "BAD-01",
+      "grade_band": "G1_6",
+      "topic": "信息不足与干扰题",
+      "difficulty": "干扰/条件检查",
+      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
+      "problem": "一个三角形底是8厘米，面积是多少？",
+      "known_quantities": "底=8厘米；缺少对应高",
+      "target_quantity": "三角形面积",
+      "concepts": [
+        "条件识别",
+        "拒绝猜测"
+      ],
+      "formula": "三角形面积=底×高÷2",
+      "formula_rearrangement": "不进行公式代入",
+      "calculation_steps": "",
+      "standard_answer": null,
+      "verification": "缺少高，无法唯一确定面积",
+      "verification_status": "unverified",
+      "verification_reason": "缺少高，无法唯一确定面积",
+      "solution_steps": [
+        {
+          "title": "读题与提取条件",
+          "explanation": "底=8厘米；缺少对应高",
+          "narration": "先整理题目已知条件。"
+        },
+        {
+          "title": "检查必要信息",
+          "explanation": "缺少高，无法唯一确定面积",
+          "narration": "检查是否具备求解所需的全部条件。"
+        },
+        {
+          "title": "结论",
+          "explanation": "条件不足或量纲冲突，不能可靠计算。",
+          "narration": "目前不能给出可靠答案，不会自行补造条件。"
+        }
+      ],
+      "tags": [
+        "干扰题",
+        "条件检查"
+      ],
+      "source_refs": [
+        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
+        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
+      ]
+    },
+    {
+      "id": "BAD-02",
+      "grade_band": "G1_6",
+      "topic": "信息不足与干扰题",
+      "difficulty": "干扰/条件检查",
+      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
+      "problem": "一个正方形面积是64，边长和周长分别是多少？",
+      "known_quantities": "面积=64；未说明面积单位",
+      "target_quantity": "边长和周长",
+      "concepts": [
+        "条件识别",
+        "拒绝猜测"
+      ],
+      "formula": "边长=√面积；周长=4×边长",
+      "formula_rearrangement": "不进行公式代入",
+      "calculation_steps": "",
+      "standard_answer": null,
+      "verification": "单位缺失，无法给出完整且有单位的答案",
+      "verification_status": "unverified",
+      "verification_reason": "单位缺失，无法给出完整且有单位的答案",
+      "solution_steps": [
+        {
+          "title": "读题与提取条件",
+          "explanation": "面积=64；未说明面积单位",
+          "narration": "先整理题目已知条件。"
+        },
+        {
+          "title": "检查必要信息",
+          "explanation": "单位缺失，无法给出完整且有单位的答案",
+          "narration": "检查是否具备求解所需的全部条件。"
+        },
+        {
+          "title": "结论",
+          "explanation": "条件不足或量纲冲突，不能可靠计算。",
+          "narration": "目前不能给出可靠答案，不会自行补造条件。"
+        }
+      ],
+      "tags": [
+        "干扰题",
+        "条件检查"
+      ],
+      "source_refs": [
+        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
+        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
+      ]
+    },
+    {
+      "id": "BAD-03",
+      "grade_band": "G1_6",
+      "topic": "信息不足与干扰题",
+      "difficulty": "干扰/条件检查",
+      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
+      "problem": "3米等于多少平方米？",
+      "known_quantities": "原单位=米；目标单位=平方米",
+      "target_quantity": "不能直接换算",
+      "concepts": [
+        "条件识别",
+        "拒绝猜测"
+      ],
+      "formula": "长度单位与面积单位量纲不同",
+      "formula_rearrangement": "不进行公式代入",
+      "calculation_steps": "",
+      "standard_answer": null,
+      "verification": "长度与面积不能直接换算",
+      "verification_status": "unverified",
+      "verification_reason": "长度与面积不能直接换算",
+      "solution_steps": [
+        {
+          "title": "读题与提取条件",
+          "explanation": "原单位=米；目标单位=平方米",
+          "narration": "先整理题目已知条件。"
+        },
+        {
+          "title": "检查必要信息",
+          "explanation": "长度与面积不能直接换算",
+          "narration": "检查是否具备求解所需的全部条件。"
+        },
+        {
+          "title": "结论",
+          "explanation": "条件不足或量纲冲突，不能可靠计算。",
+          "narration": "目前不能给出可靠答案，不会自行补造条件。"
+        }
+      ],
+      "tags": [
+        "干扰题",
+        "条件检查"
+      ],
+      "source_refs": [
+        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
+        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
+      ]
+    },
+    {
+      "id": "BAD-04",
+      "grade_band": "G1_6",
+      "topic": "信息不足与干扰题",
+      "difficulty": "干扰/条件检查",
+      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
+      "problem": "一个长方形周长是30厘米，面积是多少？",
+      "known_quantities": "周长=30厘米；缺少长或宽",
+      "target_quantity": "长方形面积",
+      "concepts": [
+        "条件识别",
+        "拒绝猜测"
+      ],
+      "formula": "周长=2×(长+宽)；面积=长×宽",
+      "formula_rearrangement": "不进行公式代入",
+      "calculation_steps": "",
+      "standard_answer": null,
+      "verification": "仅有周长不能确定唯一面积",
+      "verification_status": "unverified",
+      "verification_reason": "仅有周长不能确定唯一面积",
+      "solution_steps": [
+        {
+          "title": "读题与提取条件",
+          "explanation": "周长=30厘米；缺少长或宽",
+          "narration": "先整理题目已知条件。"
+        },
+        {
+          "title": "检查必要信息",
+          "explanation": "仅有周长不能确定唯一面积",
+          "narration": "检查是否具备求解所需的全部条件。"
+        },
+        {
+          "title": "结论",
+          "explanation": "条件不足或量纲冲突，不能可靠计算。",
+          "narration": "目前不能给出可靠答案，不会自行补造条件。"
+        }
+      ],
+      "tags": [
+        "干扰题",
+        "条件检查"
+      ],
+      "source_refs": [
+        "https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582346895190.pdf",
+        "https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995566.html"
+      ]
+    },
+    {
+      "id": "BAD-05",
+      "grade_band": "G1_6",
+      "topic": "信息不足与干扰题",
+      "difficulty": "干扰/条件检查",
+      "authorship": "原创编写或依据课程知识点改编；非教材原文摘录",
+      "problem": "小明比小红多一些苹果，两人一共有多少个？",
+      "known_quantities": "只有大小关系，没有具体数量",
+      "target_quantity": "苹果总数",
+      "concepts": [
+        "条件识别",
+        "拒绝猜测"
+      ],
+      "formula": "总数=小明数量+小红数量",
+      "formula_rearrangement": "不进行公式代入",
+      "calculation_steps": "",
+      "standard_answer": null,
+      "verification": "缺少两人的具体数量，无法计算",
+      "verification_status": "unverified",
+      "verification_reason": "缺少两人的具体数量，无法计算",
+      "solution_steps": [
+        {
+          "title": "读题与提取条件",
+          "explanation": "只有大小关系，没有具体数量",
+          "narration": "先整理题目已知条件。"
+        },
+        {
+          "title": "检查必要信息",
+          "explanation": "缺少两人的具体数量，无法计算",
           "narration": "检查是否具备求解所需的全部条件。"
         },
         {
