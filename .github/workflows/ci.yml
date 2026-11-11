@@ -59,6 +59,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Validate Docker Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose -f backend/docker-compose.yml config --quiet
       - name: Install FFmpeg and CJK fonts
         run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
       - name: Install backend dependencies
