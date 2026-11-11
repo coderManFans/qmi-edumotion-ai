@@ -36,3 +36,150 @@ jobs:
       - name: Build frontend
         run: npm run build
         working-directory: frontend
+
+  async-video-e2e:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      REDIS_URL: redis://127.0.0.1:6379/0
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/1
+      TTS_PROVIDER: none
+      VIDEO_OUTPUT_DIR: ${{ runner.temp }}/edumotion-renders
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install FFmpeg and CJK fonts
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-cjk
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+        working-directory: backend
+      - name: Exercise live Redis, Celery, API, MP4 download and audio mux
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$VIDEO_OUTPUT_DIR"
+          celery -A app.celery_app:celery_app worker --loglevel=info --pool=solo --concurrency=1 > "$RUNNER_TEMP/worker.log" 2>&1 &
+          WORKER_PID=$!
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/api.log" 2>&1 &
+          API_PID=$!
+          cleanup() {
+            kill "$API_PID" "$WORKER_PID" 2>/dev/null || true
+            wait "$API_PID" "$WORKER_PID" 2>/dev/null || true
+            echo "--- Celery worker log ---"
+            cat "$RUNNER_TEMP/worker.log" || true
+            echo "--- API log ---"
+            cat "$RUNNER_TEMP/api.log" || true
+          }
+          trap cleanup EXIT
+          python - <<'PY'
+          import os
+          import pathlib
+          import subprocess
+          import time
+
+          import httpx
+
+          base = "http://127.0.0.1:8000"
+          with httpx.Client(timeout=20) as client:
+              for _ in range(60):
+                  try:
+                      health = client.get(base + "/api/v1/health")
+                      if health.status_code == 200:
+                          break
+                  except httpx.HTTPError:
+                      pass
+                  time.sleep(1)
+              else:
+                  raise RuntimeError("API did not become healthy")
+
+              question = "一个长方形长 8 厘米、宽 5 厘米，面积是多少？"
+              submitted = client.post(
+                  base + "/api/v1/problems/video",
+                  data={"text": question},
+              )
+              assert submitted.status_code == 202, submitted.text
+              job_id = submitted.json()["job_id"]
+
+              deadline = time.monotonic() + 180
+              while time.monotonic() < deadline:
+                  response = client.get(base + f"/api/v1/problems/jobs/{job_id}")
+                  assert response.status_code == 200, response.text
+                  job = response.json()
+                  if job["status"] == "failed":
+                      raise RuntimeError(job.get("error") or "video task failed")
+                  if job["status"] == "completed":
+                      break
+                  time.sleep(0.5)
+              else:
+                  raise TimeoutError("video job did not complete within 180 seconds")
+
+              result = job["result"]
+              assert result["answer"] == "40平方单位", result
+              assert result["verification_status"] == "verified", result
+              assert result["audio_status"] == "disabled", result
+
+              downloaded = client.get(base + job["video_url"])
+              assert downloaded.status_code == 200, downloaded.text
+              assert downloaded.headers["content-type"].startswith("video/mp4")
+              assert len(downloaded.content) > 1000
+              video_file = pathlib.Path(os.environ["VIDEO_OUTPUT_DIR"]) / f"{job_id}.mp4"
+              assert video_file.is_file() and video_file.stat().st_size > 1000
+
+          # Exercise ffmpeg/ffprobe audio mux and duration matching independently
+          # of the external Edge TTS service.
+          audio_file = pathlib.Path(os.environ["RUNNER_TEMP"]) / "sync-tone.mp3"
+          subprocess.run(
+              [
+                  "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                  "-f", "lavfi", "-i", "sine=frequency=440:duration=1.5",
+                  "-q:a", "3", str(audio_file),
+              ],
+              check=True,
+          )
+
+          from app.render.video_renderer import render_explanation_video
+          from app.schemas.problem import ExplanationScene
+
+          scene = ExplanationScene(
+              id="sync-scene",
+              title="音画同步测试",
+              narration="这是一段用于验证音画同步的测试音频。",
+              visual="answer",
+              visual_text="1 + 1 = 2",
+          )
+          muxed = render_explanation_video(
+              "sync-check",
+              [scene],
+              audio_path=audio_file,
+              scene_durations=[1.5],
+          )
+          streams = subprocess.run(
+              [
+                  "ffprobe", "-v", "error", "-show_entries", "stream=codec_type",
+                  "-of", "csv=p=0", str(muxed),
+              ],
+              capture_output=True, text=True, check=True,
+          ).stdout.splitlines()
+          assert "video" in streams and "audio" in streams, streams
+          duration = float(subprocess.run(
+              [
+                  "ffprobe", "-v", "error", "-show_entries", "format=duration",
+                  "-of", "default=noprint_wrappers=1:nokey=1", str(muxed),
+              ],
+              capture_output=True, text=True, check=True,
+          ).stdout.strip())
+          assert abs(duration - 1.5) <= 0.35, duration
+          print("Live async video pipeline and synthetic audio mux smoke test passed.")
+          PY
