@@ -424,8 +424,9 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     # Percentage of a known whole: e.g. 200的20%是多少.
-    if len(values) == 2 and re.search(r"百分之|%", text) and re.search(r"求.*多少|是多少|现价|打折", text):
-        whole = values[0]
+    direct_percent = re.search(r"(\d+(?:\.\d+)?)的(\d+(?:\.\d+)?)%", text)
+    if direct_percent and re.search(r"是多少|求.*多少", text) and not ("涨价" in text and "降价" in text):
+        whole = float(direct_percent.group(1))
         percent_match = re.search(r"(\d+(?:\.\d+)?)%", text)
         if percent_match:
             rate = float(percent_match.group(1)) / 100
