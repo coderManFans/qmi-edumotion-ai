@@ -669,12 +669,29 @@ async def solve_problem(problem: str) -> SolvedProblem:
 
 def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationScene]:
     visual_types = ["highlight", "step", "answer", "check"]
+    compact = re.sub(r"\\s+", "", original_text)
+    if "正方形" in compact:
+        knowledge_visual = "knowledge_square"
+    elif "长方形" in compact:
+        knowledge_visual = "knowledge_rectangle"
+    elif any(token in compact for token in ("行程", "速度", "路程", "千米/小时", "公里/小时")):
+        knowledge_visual = "knowledge_journey"
+    elif any(token in compact for token in ("平均分", "每人", "分给", "平分")):
+        knowledge_visual = "knowledge_sharing"
+    elif "/" in compact or "分数" in compact:
+        knowledge_visual = "knowledge_fraction"
+    elif "%" in compact or "百分之" in compact or "折扣" in compact:
+        knowledge_visual = "knowledge_percentage"
+    elif any(token in compact for token in ("换算", "等于多少平方", "等于多少立方")):
+        knowledge_visual = "knowledge_conversion"
+    else:
+        knowledge_visual = "step"
     scenes = [
         ExplanationScene(
             id=f"scene-{i + 1}",
             title=step.title,
             narration=step.narration,
-            visual=visual_types[min(i, len(visual_types) - 1)],
+            visual=knowledge_visual if knowledge_visual != "step" else visual_types[min(i, len(visual_types) - 1)],
             visual_text=step.visual_text,
             expression=step.expression,
         )
@@ -684,7 +701,7 @@ def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationSc
         id="scene-0",
         title="题目呈现",
         narration="我们先完整读一遍题目，明确已知条件和所求问题。",
-        visual="question",
+        visual=knowledge_visual if knowledge_visual != "step" else "question",
         visual_text=original_text[:100],
     ))
     if solution.answer is not None and solution.verification_status == "verified":
