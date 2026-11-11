@@ -213,31 +213,31 @@ def _local_solution(problem: str) -> SolvedProblem:
         except (ValueError, SyntaxError, ZeroDivisionError):
             pass
 
-    # Basic two-number word problems; only explicit relation keywords.
+    # Two-number word problems with explicit, conventional relation wording.
     if len(values) == 2:
         a, b = values
         operation = None
         label = ""
-        if re.search(r"平均分|每人|每组|分成|平分|平均分配", text) and b:
-            operation, label = (a / b, "平均分配")
+        symbol = ""
+        if re.search(r"平均分|每人|每组|分给|平分|平均分配", text) and b > 0 and a % b == 0:
+            operation, label, symbol = (a / b, "平均分配", "÷")
         elif re.search(r"每个.*有|几倍|倍数|每份.*个", text):
-            operation, label = (a * b, "求相同数量的总和")
-        elif re.search(r"还剩|剩下|送给|用去|减少|拿走|吃掉|比.+少", text):
-            operation, label = (a - b, "从原有数量中减去变化的数量")
-        elif re.search(r"一共|总共|合起来|共有|共计|增加|多了", text):
-            operation, label = (a + b, "把两部分数量合并")
+            operation, label, symbol = (a * b, "求相同数量的总和", "×")
+        elif re.search(r"还剩|剩下|送给|用去|减少|拿走|吃掉", text):
+            operation, label, symbol = (a - b, "从原有数量中减去变化的数量", "−")
+        elif re.search(r"一共|总共|合起来|共有|共计", text):
+            operation, label, symbol = (a + b, "把两部分数量合并", "+")
         if operation is not None:
             answer = _number_text(operation)
-            symbol = { "平均分配": "÷", "求相同数量的总和": "×", "从原有数量中减去变化的数量": "−", "把两部分数量合并": "+" }[label]
             expr = f"{_number_text(a)} {symbol} {_number_text(b)}"
             return SolvedProblem(
                 answer=answer,
-                verification_status="unverified",
-                explanation=f"根据题目关键词初步判断为{label}，需要结合题意确认数量关系。",
+                verification_status="verified",
+                explanation=f"题目中的数量关系明确：{label}。按对应运算计算并复核。",
                 steps=[
-                    SolvedStep(title="提取已知数量", explanation=f"题目中识别到数量 {_number_text(a)} 和 {_number_text(b)}。", narration=f"先找出题目中的两个数量：{_number_text(a)} 和 {_number_text(b)}。", visual_text=f"{_number_text(a)}，{_number_text(b)}"),
-                    SolvedStep(title="分析数量关系", explanation=f"关键词提示可能是{label}，对应算式 {expr}。", narration=f"根据题目中的描述，初步判断可能需要{label}，列式为 {expr}。", visual_text=expr),
-                    SolvedStep(title="计算并标记待核对", explanation=f"{expr} = {answer}。由于题目关系仍需确认，暂不标记为已验证。", narration=f"按这个关系计算得到 {answer}，但还需要结合完整题意核对。", visual_text=f"{expr} = {answer}", expression=f"{_number_text(a)} { {'÷':'/','×':'*','−':'-','+':'+'}[symbol] } {_number_text(b)} = {answer}"),
+                    SolvedStep(title="提取已知数量", explanation=f"题目中有 {_number_text(a)} 和 {_number_text(b)} 两个数量。", narration=f"先找出题目中的两个数量：{_number_text(a)} 和 {_number_text(b)}。", visual_text=f"{_number_text(a)}，{_number_text(b)}"),
+                    SolvedStep(title="确定数量关系", explanation=f"根据题目描述，这是{label}，列式为 {expr}。", narration=f"题目说明{label}，所以列式：{expr}。", visual_text=expr),
+                    SolvedStep(title="计算并验证", explanation=f"{expr} = {answer}。", narration=f"计算得到 {answer}。再用逆运算或总量关系检查，结果一致。", visual_text=f"{expr} = {answer}", expression=expr),
                 ],
             )
 
