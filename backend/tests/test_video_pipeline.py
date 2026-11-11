@@ -1,3 +1,5 @@
+import pytest
+
 from app.ai.problem_solver import _local_solution, to_scenes
 from app.render.video_renderer import _frame
 from app.schemas.problem import ExplanationScene
@@ -32,3 +34,20 @@ def test_renderer_produces_a_video_frame():
     frame = _frame(scene, 0, 1, 1, 12)
     assert isinstance(frame, Image.Image)
     assert frame.size == (1280, 720)
+
+
+@pytest.mark.parametrize("duration", [float("nan"), 121.0, 0.0])
+def test_renderer_rejects_invalid_or_overlong_audio_segments(monkeypatch, tmp_path, duration):
+    from app.render import video_renderer
+
+    monkeypatch.setattr(video_renderer.shutil, "which", lambda _: "ffmpeg")
+    monkeypatch.setattr(video_renderer.settings, "video_output_dir", str(tmp_path))
+    scene = ExplanationScene(
+        id="scene-1", title="计算", narration="计算结果。",
+        visual="answer", visual_text="1 + 1 = 2",
+    )
+
+    with pytest.raises(ValueError, match="有效数值"):
+        video_renderer.render_explanation_video(
+            "job-test", [scene], scene_durations=[duration]
+        )
