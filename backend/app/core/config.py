@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     tts_provider: str = "edge"
     tts_voice: str = "zh-CN-XiaoxiaoNeural"
     tts_rate: str = "+0%"
+    tts_timeout_seconds: float = 60.0
 
     ffmpeg_bin: str = "ffmpeg"
     video_output_dir: str = "./data/renders"
