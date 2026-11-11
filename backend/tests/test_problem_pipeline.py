@@ -115,7 +115,7 @@ def test_trapezoid_area_formula():
 
 def test_travel_distance_formula():
     solved = _local_solution("汽车速度是每小时60千米，行驶3小时，路程是多少？")
-    assert solved.answer == "180（按题目单位）"
+    assert solved.answer == "180千米"
     assert solved.verification_status == "verified"
 
 
@@ -139,4 +139,10 @@ def test_knowledge_catalog_contains_primary_topics():
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     topic_ids = {topic["id"] for topic in catalog["problem_families"]}
     assert {"square", "rectangle", "triangle", "trapezoid", "distance_speed_time", "percentage"} <= topic_ids
+
+
+def test_percentage_of_whole():
+    solved = _local_solution("200的20%是多少？")
+    assert solved.answer == "40"
+    assert solved.verification_status == "verified"
 
