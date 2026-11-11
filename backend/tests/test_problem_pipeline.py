@@ -146,3 +146,103 @@ def test_percentage_of_whole():
     assert solved.answer == "40"
     assert solved.verification_status == "verified"
 
+
+def test_square_side_from_area_inverse_formula():
+    solved = _local_solution("一个正方形面积是64平方厘米，边长是多少？")
+    assert solved.answer == "8厘米"
+    assert solved.verification_status == "verified"
+    assert any("边长 = √面积" in step.explanation for step in solved.steps)
+
+
+def test_rectangle_width_from_area_inverse_formula():
+    solved = _local_solution("一个长方形面积是48平方厘米，长是8厘米，宽是多少？")
+    assert solved.answer == "6厘米"
+    assert solved.verification_status == "verified"
+
+
+def test_unit_price_quantity_inverse_formula():
+    solved = _local_solution("买文具总价是48元，单价是6元，买了多少支？")
+    assert solved.answer == "8个/支/本（按题目对象）"
+    assert solved.verification_status == "verified"
+
+
+def test_travel_time_inverse_formula():
+    solved = _local_solution("路程是180千米，速度是60千米/小时，时间是多少小时？")
+    assert solved.answer == "3小时"
+    assert solved.verification_status == "verified"
+
+
+def test_fraction_find_unit_whole():
+    solved = _local_solution("一个数的3/5是18，求这个数。")
+    assert solved.answer == "30"
+    assert solved.verification_status == "verified"
+
+
+def test_fraction_find_part_from_whole():
+    solved = _local_solution("60的3/5是多少？")
+    assert solved.answer == "36"
+    assert solved.verification_status == "verified"
+
+
+def test_percentage_find_unit_whole():
+    solved = _local_solution("一个数的25%是20，求这个数。")
+    assert solved.answer == "80"
+    assert solved.verification_status == "verified"
+
+
+def test_area_unit_conversion_uses_squared_factor():
+    solved = _local_solution("2平方米等于多少平方厘米？")
+    assert solved.answer == "20000平方厘米"
+    assert solved.verification_status == "verified"
+
+
+def test_volume_unit_conversion_uses_cubed_factor():
+    solved = _local_solution("1立方米等于多少立方分米？")
+    assert solved.answer == "1000立方分米"
+    assert solved.verification_status == "verified"
+
+
+def test_time_conversion_uses_sixty_not_ten():
+    solved = _local_solution("2小时换算成分钟是多少？")
+    assert solved.answer == "120分钟"
+    assert solved.verification_status == "verified"
+
+
+def test_incompatible_unit_conversion_is_unverified():
+    solved = _local_solution("3米等于多少平方米？")
+    assert solved.answer is None
+    assert solved.verification_status == "unverified"
+
+
+def test_rectangle_two_step_perimeter_then_area():
+    solved = _local_solution("一个长方形周长是30厘米，长是9厘米，求面积。")
+    assert solved.answer == "54平方厘米"
+    assert solved.verification_status == "verified"
+    assert any(step.title == "先求宽" for step in solved.steps)
+    assert any(step.title == "再求面积" for step in solved.steps)
+
+
+def test_multi_step_equal_groups_then_subtract():
+    solved = _local_solution("仓库有3箱矿泉水，每箱12瓶，卖出5瓶，还剩多少瓶？")
+    assert solved.answer == "31"
+    assert solved.verification_status == "verified"
+    assert len(solved.steps) == 4
+
+
+def test_misleading_keyword_does_not_override_semantic_roles():
+    solved = _local_solution("路程是180千米，速度是60千米/小时，不是求路程，求时间。")
+    assert solved.answer == "3小时"
+    assert solved.verification_status == "verified"
+
+
+def test_missing_geometry_condition_stays_unverified():
+    solved = _local_solution("一个三角形底是8厘米，面积是多少？")
+    assert solved.answer is None
+    assert solved.verification_status == "unverified"
+
+
+def test_number_order_is_not_used_for_inverse_travel_problem():
+    solved = _local_solution("速度是60千米/小时，路程是180千米，求行驶时间。")
+    assert solved.answer == "3小时"
+    assert solved.verification_status == "verified"
+
