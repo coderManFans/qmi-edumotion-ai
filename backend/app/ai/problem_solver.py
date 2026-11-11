@@ -121,7 +121,7 @@ def _local_solution(problem: str) -> SolvedProblem:
         match = re.search(rf"(?<!周){label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
         return float(match.group(1)) if match else None
 
-    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算)边长|边长是多少", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
+    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
         return SolvedProblem(
             answer=None, verification_status="unverified",
             explanation="题目没有说明面积单位，无法给出完整的长度单位答案。",
@@ -133,7 +133,7 @@ def _local_solution(problem: str) -> SolvedProblem:
         )
 
     # Reverse geometry: known area and one dimension.
-    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算)边长|边长是多少", text):
+    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text):
         area = labeled("面积")
         if area is not None and area >= 0:
             side = math.sqrt(area)
