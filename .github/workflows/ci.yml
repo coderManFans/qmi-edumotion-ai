@@ -102,7 +102,7 @@ jobs:
               raise TimeoutError("Docker Compose video job did not complete within 180 seconds")
 
           result = job["result"]
-          assert result["answer"] == "40平方单位", result
+          assert result["answer"] == "40平方厘米", result
           assert result["verification_status"] == "verified", result
           assert result["audio_status"] == "disabled", result
 
