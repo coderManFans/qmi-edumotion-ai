@@ -40,6 +40,8 @@
 
     celery -A app.celery_app:celery_app worker --loglevel=info
 
+Redis Python 客户端要求为 6.1.0 或更高版本；requirements.txt 已显式约束该版本，以匹配 Celery/Kombu 的 Redis transport。后台视频任务默认软超时 15 分钟、硬超时 16 分钟，可通过 CELERY_TASK_SOFT_TIME_LIMIT_SECONDS 和 CELERY_TASK_TIME_LIMIT_SECONDS 调整；硬超时应大于软超时。
+
 ### 4. 前端
 
     cd frontend
@@ -65,7 +67,7 @@ Compose 会启动 Redis、API 和 Celery Worker。API 暴露在 http://localhost
     LLM_API_KEY=your-api-key
     LLM_MODEL=your-model-name
 
-留空时会使用本地规则解题，仅覆盖少量明确的基础数量关系题；不确定的问题不会编造答案。
+留空时会使用本地规则解题，仅覆盖少量明确的基础数量关系题；不确定的问题不会编造答案。API Key 只应放在本地 .env 或部署环境变量中，不要提交到仓库。
 
 ## API
 
