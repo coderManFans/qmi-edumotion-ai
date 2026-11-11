@@ -13,7 +13,7 @@
 
 ## 中文语音
 
-默认使用 Edge TTS 的普通话神经语音 zh-CN-XiaoxiaoNeural，无需额外 API Key，但 Worker 需要能够访问互联网。可以通过 TTS_VOICE 更换 Edge TTS 支持的中文音色，通过 TTS_RATE 调整语速。该服务依赖外部语音服务可用性；若部署环境无法访问外网，任务会失败并在任务状态接口返回错误。可将 TTS provider adapter 替换为自托管语音服务。
+默认使用 Edge TTS 的普通话神经语音 zh-CN-XiaoxiaoNeural，无需额外 API Key，但 Worker 需要能够访问互联网。可以通过 TTS_VOICE 更换 Edge TTS 支持的中文音色，通过 TTS_RATE 调整语速。单个分镜的 TTS 请求默认 60 秒超时（TTS_TIMEOUT_SECONDS）；若外部语音服务不可用或超时，任务会失败并在任务状态接口返回错误。可将 TTS provider adapter 替换为自托管语音服务。
 
 设置 TTS_PROVIDER=none 可关闭配音并生成静音视频。
 
