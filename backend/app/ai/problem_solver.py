@@ -174,9 +174,9 @@ def _local_solution(problem: str) -> SolvedProblem:
                 rearranged="路程 = 速度 × 时间",
                 substitution=f"{_number_text(speed)} * {_number_text(duration)}",
                 result=distance,
-                unit="（按题目单位）",
+                unit=("千米" if "千米" in text or "公里" in text else "米" if "米" in text else ""),
                 conclusion="行驶的路程",
-                verification=f"{_number_text(distance)} ÷ {_number_text(duration) if duration else '时间'} = {_number_text(speed)}（速度复核）" if duration else "时间为0，路程也为0",
+                verification=f"{_number_text(distance)} ÷ {_number_text(duration)} = {_number_text(speed)}（速度复核）" if duration else "时间为0，路程也为0",
             )
 
     # Unit price × quantity = total price.
@@ -209,6 +209,28 @@ def _local_solution(problem: str) -> SolvedProblem:
                 unit="",
                 conclusion="平均数",
                 verification=f"{_number_text(average)} × {_number_text(count)} = {_number_text(total)}",
+            )
+
+    # Percentage of a known whole: e.g. 200的20%是多少.
+    if len(values) == 2 and re.search(r"百分之|%", text) and re.search(r"求.*多少|是多少|现价|打折", text):
+        whole = values[0]
+        percent_match = re.search(r"(\d+(?:\.\d+)?)%", text)
+        if percent_match:
+            rate = float(percent_match.group(1)) / 100
+        else:
+            chinese_rate = re.search(r"百分之(\d+(?:\.\d+)?)", text)
+            rate = float(chinese_rate.group(1)) / 100 if chinese_rate else None
+        if rate is not None and whole >= 0 and 0 <= rate <= 1:
+            result = whole * rate
+            return _steps_for_formula(
+                known=f"整体量 = {_number_text(whole)}，百分率 = {_number_text(rate * 100)}%",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="部分量 = 整体量 × 百分率",
+                substitution=f"{_number_text(whole)} * {_number_text(rate)}",
+                result=result,
+                unit="",
+                conclusion="对应的部分量",
+                verification=f"{_number_text(result)} ÷ {_number_text(whole) if whole else '整体量'} = {_number_text(rate * 100)}%" if whole else "整体量为0，部分量也为0",
             )
 
     # Circle circumference / area with an explicit radius or diameter.
