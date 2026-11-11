@@ -2,6 +2,8 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace
 
+import pytest
+
 from app.schemas.problem import ExplanationScene
 from app.services.tts import synthesize_scene_audio
 
@@ -26,7 +28,6 @@ def test_disabled_tts_returns_silent_video_configuration(monkeypatch, tmp_path: 
 def test_tts_provider_rejects_unknown_provider(monkeypatch, tmp_path: Path):
     from app.core import config
     import asyncio
-    import pytest
 
     monkeypatch.setattr(config.settings, "tts_provider", "unknown")
     scene = ExplanationScene(
@@ -79,3 +80,27 @@ def test_edge_tts_adapter_saves_audio_and_uses_ffprobe_duration(monkeypatch, tmp
     assert durations == [1.25]
     assert calls == [("十二减四等于八。", "zh-CN-XiaoxiaoNeural", "+0%")]
     assert (tmp_path / "audio_concat.txt").read_text(encoding="utf-8") == "file 'scene_000.mp3'\n"
+
+
+def test_edge_tts_timeout_becomes_a_task_failure(monkeypatch, tmp_path: Path):
+    import asyncio
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "tts_provider", "edge")
+    monkeypatch.setattr(config.settings, "tts_timeout_seconds", 0.01)
+
+    class SlowCommunicate:
+        def __init__(self, text, voice, rate):
+            pass
+
+        async def save(self, path):
+            await asyncio.Event().wait()
+
+    monkeypatch.setitem(sys.modules, "edge_tts", SimpleNamespace(Communicate=SlowCommunicate))
+    scene = ExplanationScene(
+        id="scene-1", title="计算", narration="计算结果。",
+        visual="answer", visual_text="1 + 1 = 2",
+    )
+
+    with pytest.raises(RuntimeError, match="Edge TTS 请求超时"):
+        asyncio.run(synthesize_scene_audio([scene], tmp_path))
