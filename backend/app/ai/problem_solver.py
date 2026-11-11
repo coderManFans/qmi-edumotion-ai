@@ -115,6 +115,135 @@ def _local_solution(problem: str) -> SolvedProblem:
     numbers = re.findall(r"(?<![A-Za-z])\d+(?:\.\d+)?", text)
     values = [float(n) for n in numbers]
 
+    # Triangle area: the prompt must explicitly provide base and height.
+    if "三角形" in text and "面积" in text and len(values) == 2 and re.search(r"底.*高|高.*底", text):
+        base, height = values
+        if base >= 0 and height >= 0:
+            area = base * height / 2
+            return _steps_for_formula(
+                known=f"底 = {_number_text(base)}，高 = {_number_text(height)}",
+                formula="三角形面积 = 底 × 高 ÷ 2",
+                rearranged="面积 = 底 × 高 ÷ 2",
+                substitution=f"{_number_text(base)} * {_number_text(height)} / 2",
+                result=area,
+                unit="平方单位",
+                conclusion="三角形的面积",
+                verification=f"{_number_text(base)} × {_number_text(height)} ÷ 2 = {_number_text(area)}",
+            )
+
+    # Parallelogram area: require explicit base and perpendicular height wording.
+    if "平行四边形" in text and "面积" in text and len(values) == 2 and re.search(r"底.*高|高.*底", text):
+        base, height = values
+        if base >= 0 and height >= 0:
+            area = base * height
+            return _steps_for_formula(
+                known=f"底 = {_number_text(base)}，高 = {_number_text(height)}",
+                formula="平行四边形面积 = 底 × 高",
+                rearranged="面积 = 底 × 高",
+                substitution=f"{_number_text(base)} * {_number_text(height)}",
+                result=area,
+                unit="平方单位",
+                conclusion="平行四边形的面积",
+                verification=f"{_number_text(base)} × {_number_text(height)} = {_number_text(area)}",
+            )
+
+    # Trapezoid area: require upper base, lower base and height.
+    if "梯形" in text and "面积" in text and len(values) == 3 and re.search(r"上底.*下底.*高|下底.*上底.*高|上底.*高.*下底", text):
+        upper, lower, height = values
+        if min(upper, lower, height) >= 0:
+            area = (upper + lower) * height / 2
+            return _steps_for_formula(
+                known=f"上底 = {_number_text(upper)}，下底 = {_number_text(lower)}，高 = {_number_text(height)}",
+                formula="梯形面积 = (上底 + 下底) × 高 ÷ 2",
+                rearranged="面积 = (上底 + 下底) × 高 ÷ 2",
+                substitution=f"({_number_text(upper)} + {_number_text(lower)}) * {_number_text(height)} / 2",
+                result=area,
+                unit="平方单位",
+                conclusion="梯形的面积",
+                verification=f"({_number_text(upper)} + {_number_text(lower)}) × {_number_text(height)} ÷ 2 = {_number_text(area)}",
+            )
+
+    # Distance = speed × time. Require explicit semantic labels to avoid guessing number roles.
+    if len(values) == 2 and re.search(r"速度|每小时|每分钟", text) and re.search(r"时间|小时|分钟", text) and re.search(r"路程|行驶多远|多少千米|多少米", text):
+        speed, duration = values
+        if speed >= 0 and duration >= 0:
+            distance = speed * duration
+            return _steps_for_formula(
+                known=f"速度 = {_number_text(speed)}，时间 = {_number_text(duration)}",
+                formula="路程 = 速度 × 时间",
+                rearranged="路程 = 速度 × 时间",
+                substitution=f"{_number_text(speed)} * {_number_text(duration)}",
+                result=distance,
+                unit="（按题目单位）",
+                conclusion="行驶的路程",
+                verification=f"{_number_text(distance)} ÷ {_number_text(duration) if duration else '时间'} = {_number_text(speed)}（速度复核）" if duration else "时间为0，路程也为0",
+            )
+
+    # Unit price × quantity = total price.
+    if len(values) == 2 and re.search(r"单价|每支|每个|每本|每千克|每斤", text) and re.search(r"总价|一共.*元|共.*元|买了.*个|买.*支|买.*本", text):
+        unit_price, quantity = values
+        if unit_price >= 0 and quantity >= 0:
+            total = unit_price * quantity
+            return _steps_for_formula(
+                known=f"单价 = {_number_text(unit_price)}，数量 = {_number_text(quantity)}",
+                formula="总价 = 单价 × 数量",
+                rearranged="总价 = 单价 × 数量",
+                substitution=f"{_number_text(unit_price)} * {_number_text(quantity)}",
+                result=total,
+                unit="元",
+                conclusion="需要支付的总价",
+                verification=f"{_number_text(total)} ÷ {_number_text(quantity) if quantity else '数量'} = {_number_text(unit_price)}（单价复核）" if quantity else "数量为0，总价也为0",
+            )
+
+    # Average = sum / count; require explicit total and number of items.
+    if len(values) == 2 and re.search(r"平均数|平均每人|平均每组|平均成绩", text) and re.search(r"总和|一共|总数|人数|个数据|几个人|几组", text):
+        total, count = values
+        if total >= 0 and count > 0:
+            average = total / count
+            return _steps_for_formula(
+                known=f"总和 = {_number_text(total)}，份数 = {_number_text(count)}",
+                formula="平均数 = 总和 ÷ 份数",
+                rearranged="平均数 = 总和 ÷ 份数",
+                substitution=f"{_number_text(total)} / {_number_text(count)}",
+                result=average,
+                unit="",
+                conclusion="平均数",
+                verification=f"{_number_text(average)} × {_number_text(count)} = {_number_text(total)}",
+            )
+
+    # Circle circumference / area with an explicit radius or diameter.
+    if "圆" in text and len(values) == 1 and ("周长" in text or "面积" in text):
+        measure = values[0]
+        if measure >= 0 and "半径" in text:
+            radius = measure
+        elif measure >= 0 and "直径" in text:
+            radius = measure / 2
+        else:
+            radius = None
+        if radius is not None:
+            if "周长" in text:
+                result = 2 * 3.14 * radius
+                formula = "圆周长 = 2 × 3.14 × 半径"
+                substitution = f"2 * 3.14 * {_number_text(radius)}"
+                unit = ""
+                conclusion = "圆的周长（π按3.14近似计算）"
+            else:
+                result = 3.14 * radius * radius
+                formula = "圆面积 = 3.14 × 半径 × 半径"
+                substitution = f"3.14 * {_number_text(radius)} * {_number_text(radius)}"
+                unit = "平方单位"
+                conclusion = "圆的面积（π按3.14近似计算）"
+            return _steps_for_formula(
+                known=f"半径 = {_number_text(radius)}（π按3.14近似）",
+                formula=formula,
+                rearranged=formula,
+                substitution=substitution,
+                result=result,
+                unit=unit,
+                conclusion=conclusion,
+                verification=f"按π≈3.14重新代入，结果为{_number_text(result)}",
+            )
+
     # Square: one side is unknown, perimeter is known.
     if "正方形" in text and ("周长" in text or "一周" in text) and len(values) == 1 and re.search(r"求.*边长|边长.*多少", text):
         perimeter = values[0]
