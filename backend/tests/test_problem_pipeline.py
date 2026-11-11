@@ -162,7 +162,7 @@ def test_rectangle_width_from_area_inverse_formula():
 
 def test_unit_price_quantity_inverse_formula():
     solved = _local_solution("买文具总价是48元，单价是6元，买了多少支？")
-    assert solved.answer == "8个/支/本（按题目对象）"
+    assert solved.answer == "8支"
     assert solved.verification_status == "verified"
 
 
