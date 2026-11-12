@@ -165,6 +165,16 @@ def _local_solution(problem: str) -> SolvedProblem:
             rope_unit = ""
         area_unit_match = re.search(r"平方(千米|公里|米|分米|厘米|毫米)", text)
         area_unit = area_unit_match.group(1) if area_unit_match else ""
+        if area is not None and rope_value is None:
+            return SolvedProblem(
+                answer=None, verification_status="unverified",
+                explanation="题目只给出了正方形面积，没有提供绳长数值，无法判断是否足够。",
+                steps=[
+                    SolvedStep(title="提取已知条件", explanation=f"正方形面积为{_number_text(area)}，但未给出绳长。", narration="先确认正方形面积。", visual_text=f"面积：{_number_text(area)}"),
+                    SolvedStep(title="检查所需条件", explanation="判断能否绕一圈，需要先由面积求周长，再与绳长比较。", narration="目前缺少绳长数值，不能完成比较。", visual_text="缺少绳长"),
+                    SolvedStep(title="等待补充条件", explanation="请补充绳子的长度及单位。", narration="补充绳长后才能判断是否足够。", visual_text="需要绳长"),
+                ],
+            )
         if area is not None and rope_value is not None and area >= 0 and rope_value >= 0:
             if (area_unit and rope_unit and area_unit != rope_unit) or (area_unit and not rope_unit) or (rope_unit and not area_unit):
                 return SolvedProblem(
@@ -272,8 +282,22 @@ def _local_solution(problem: str) -> SolvedProblem:
                 )
 
     # Inverse unit-price relation: total price / unit price = quantity.
-    if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计", text):
-        total, price = labeled("总价"), labeled("单价")
+    if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计|花了", text):
+        total_match = re.search(r"(?:总价(?:是|为)?|一共(?:花了|是|为)?|共计(?:是|为)?|花了)(\\d+(?:\\.\\d+)?)元?", text)
+        total = float(total_match.group(1)) if total_match else labeled("总价")
+        price = labeled("单价")
+        if total is not None and price is not None and price > 0 and total >= 0:
+            quantity = total / price
+            if not math.isclose(quantity, round(quantity), abs_tol=1e-9):
+                return SolvedProblem(
+                    answer=None, verification_status="unverified",
+                    explanation="总价不能被单价整除，得到的数量不是整数，不能推断购买了部分物品。",
+                    steps=[
+                        SolvedStep(title="提取条件", explanation=f"总价={_number_text(total)}元，单价={_number_text(price)}元。", narration="先读取总价和每件物品的单价。", visual_text=f"总价 {_number_text(total)}元；单价 {_number_text(price)}元"),
+                        SolvedStep(title="计算数量", explanation="数量=总价÷单价。", narration="用总价除以单价，检查结果是否为整数。", visual_text=f"{_number_text(total)} ÷ {_number_text(price)} = {_number_text(quantity)}"),
+                        SolvedStep(title="暂不作答", explanation="购买件数应为整数，当前数据不满足条件。", narration="请核对总价或单价，系统不会四舍五入。", visual_text="数量不是整数"),
+                    ],
+                )
         if total is not None and price is not None and price > 0 and total >= 0:
             quantity = total / price
             if math.isclose(quantity, round(quantity), abs_tol=1e-9):
@@ -288,8 +312,15 @@ def _local_solution(problem: str) -> SolvedProblem:
                 )
 
     # Inverse travel relation: time = distance / speed.
-    if re.search(r"时间|几小时|多少小时|需要多久", text) and re.search(r"路程|距离", text) and re.search(r"速度|每小时|千米/小时|公里/小时", text):
-        distance, speed = labeled("路程"), labeled("速度")
+    if re.search(r"时间|几小时|多少小时|需要多久", text) and re.search(r"路程|距离|行驶", text) and re.search(r"速度|每小时|千米/小时|公里/小时", text):
+        distance = labeled("路程") or labeled("距离")
+        if distance is None:
+            travel_match = re.search(r"(?:行驶了|行驶)(\\d+(?:\\.\\d+)?)(?:千米|公里|米)?", text)
+            distance = float(travel_match.group(1)) if travel_match else None
+        speed = labeled("速度")
+        if speed is None:
+            speed_match = re.search(r"速度(?:是|为)?(\\d+(?:\\.\\d+)?)", text)
+            speed = float(speed_match.group(1)) if speed_match else None
         if distance is not None and speed is not None and speed > 0 and distance >= 0:
             time_value = distance / speed
             return _steps_for_formula(
