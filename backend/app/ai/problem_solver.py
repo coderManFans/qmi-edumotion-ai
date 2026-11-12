@@ -280,6 +280,17 @@ def _local_solution(problem: str) -> SolvedProblem:
                         SolvedStep(title="验证", explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；长×宽={_number_text(area)}", narration="把长和宽代回周长公式，周长正确；再计算面积，得到最终答案。", visual_text=f"答案：{_number_text(area)}平方{unit or '单位'}"),
                     ],
                 )
+            # An impossible or degenerate side must stop here. Otherwise a later
+            # generic area fallback can incorrectly multiply perimeter by length.
+            return SolvedProblem(
+                answer=None, verification_status="unverified",
+                explanation="由周长反推出的宽必须大于0；当前数据会得到非正宽度，长方形条件不成立。",
+                steps=[
+                    SolvedStep(title="提取条件", explanation=f"周长={_number_text(perimeter)}，长={_number_text(length)}。", narration="先读取长方形的周长和已知的长。", visual_text=f"周长 {_number_text(perimeter)}；长 {_number_text(length)}"),
+                    SolvedStep(title="检查宽度", explanation=f"宽=周长÷2−长={_number_text(perimeter)}÷2−{_number_text(length)}={_number_text(width)}，宽必须大于0。", narration="根据周长公式反推出宽度，结果不是正数，因此这些条件互相矛盾。", visual_text=f"宽 = {_number_text(perimeter)} ÷ 2 − {_number_text(length)} = {_number_text(width)}"),
+                    SolvedStep(title="拒绝不合理结果", explanation="长方形的长和宽都必须为正数，不能继续计算面积。", narration="题目数据不成立，请检查周长或长的数据。", visual_text="数据矛盾，暂不作答"),
+                ],
+            )
 
     # Inverse unit-price relation: total price / unit price = quantity.
     if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计|花了", text):
