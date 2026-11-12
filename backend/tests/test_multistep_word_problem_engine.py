@@ -92,3 +92,26 @@ def test_invalid_multistep_relationships_do_not_guess(problem):
 
     assert solved.answer is None
     assert solved.verification_status == "unverified"
+
+@pytest.mark.parametrize(
+    ("problem", "expected"),
+    [
+        ("买笔一共花了24元，每支笔单价是6元，买了几支？", "4支"),
+        ("买书总价是30元，单价是5元，买了几本书？", "6本"),
+    ],
+)
+def test_inverse_unit_price_quantity_chain(problem, expected):
+    solved = _local_solution(problem)
+
+    assert solved.answer == expected
+    assert solved.verification_status == "verified"
+    assert len(solved.steps) == 4
+    assert any("总价" in step.explanation for step in solved.steps)
+    assert any("÷" in step.visual_text or "/" in step.visual_text for step in solved.steps)
+
+
+def test_non_integral_item_quantity_is_not_rounded_or_guessed():
+    solved = _local_solution("总价是20元，单价是6元，买了几支笔？")
+
+    assert solved.answer is None
+    assert solved.verification_status == "unverified"
