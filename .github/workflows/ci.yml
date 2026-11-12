@@ -19,7 +19,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
         working-directory: backend
-      - name: Run tests
+      - name: Run deterministic multi-step word problem regression tests
+        run: pytest -q tests/test_multistep_word_problem_engine.py
+        working-directory: backend
+      - name: Run full backend test suite
         run: pytest
         working-directory: backend
 
