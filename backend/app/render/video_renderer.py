@@ -33,6 +33,54 @@ def _lines(value: str, limit: int, count: int) -> list[str]:
     return [text[i:i + limit] for i in range(0, len(text), limit)][:count] or [""]
 
 
+def _draw_knowledge_visual(draw: ImageDraw.ImageDraw, visual: str, frame: int):
+    """Draw a small topic-specific teaching visual in the right half of the lesson card."""
+    ink, accent, pale = "#344d9a", "#e5a43b", "#dce5ff"
+    if visual == "knowledge_square":
+        draw.rectangle((820, 340, 1010, 530), outline=ink, width=7, fill=pale)
+        draw.text((875, 420), "边长", font=_font(25, True), fill=ink)
+        draw.text((875, 545), "4条边相等", font=_font(20, True), fill=ink)
+    elif visual == "knowledge_rectangle":
+        draw.rectangle((790, 380, 1060, 500), outline=ink, width=7, fill=pale)
+        draw.text((890, 425), "长 × 宽", font=_font(27, True), fill=ink)
+        draw.text((860, 530), "相对边相等", font=_font(20, True), fill=ink)
+    elif visual == "knowledge_journey":
+        draw.line((790, 455, 1090, 455), fill=ink, width=8)
+        for x in (810, 1060):
+            draw.ellipse((x-10, 445, x+10, 465), fill=accent)
+        car_x = 820 + (frame * 7) % 220
+        draw.rounded_rectangle((car_x, 395, car_x+88, 445), radius=12, fill=accent, outline=ink, width=3)
+        draw.ellipse((car_x+12, 435, car_x+34, 457), fill="#26334d")
+        draw.ellipse((car_x+58, 435, car_x+80, 457), fill="#26334d")
+        draw.text((850, 500), "路程 = 速度 × 时间", font=_font(19, True), fill=ink)
+    elif visual == "knowledge_sharing":
+        for i in range(4):
+            x = 790 + i * 76
+            draw.ellipse((x, 375, x+58, 433), fill=pale, outline=ink, width=3)
+            draw.text((x+18, 390), str(i+1), font=_font(21, True), fill=ink)
+        draw.text((800, 470), "平均分成4份", font=_font(25, True), fill=ink)
+    elif visual == "knowledge_fraction":
+        x0, y0, width = 790, 395, 280
+        draw.rounded_rectangle((x0, y0, x0+width, y0+54), radius=8, fill="#edf0f7", outline=ink, width=2)
+        for i in range(1, 5):
+            x = x0 + i * width / 5
+            draw.line((x, y0, x, y0+54), fill="#ffffff", width=4)
+        draw.rectangle((x0, y0, x0+width*3/5, y0+54), fill=accent)
+        draw.text((850, 480), "单位“1”平均分成5份", font=_font(21, True), fill=ink)
+    elif visual == "knowledge_percentage":
+        draw.ellipse((850, 355, 1040, 545), outline="#dce2ef", width=22)
+        draw.arc((850, 355, 1040, 545), start=270, end=342, fill=accent, width=22)
+        draw.text((885, 425), "百分率", font=_font(26, True), fill=ink)
+    elif visual == "knowledge_conversion":
+        draw.rounded_rectangle((785, 375, 925, 450), radius=14, fill=pale, outline=ink, width=3)
+        draw.rounded_rectangle((1000, 375, 1140, 450), radius=14, fill=pale, outline=ink, width=3)
+        draw.text((815, 395), "原单位", font=_font(22, True), fill=ink)
+        draw.text((1025, 395), "目标单位", font=_font(22, True), fill=ink)
+        draw.line((935, 413, 990, 413), fill=accent, width=7)
+        draw.polygon([(990, 413), (975, 402), (975, 424)], fill=accent)
+        draw.text((830, 490), "先看量纲，再用进率", font=_font(21, True), fill=ink)
+
+
 def _frame(scene: ExplanationScene, index: int, total: int, frame: int, frames_per_scene: int) -> Image.Image:
     image = Image.new("RGB", (WIDTH, HEIGHT), "#f4f6fc")
     draw = ImageDraw.Draw(image)
@@ -45,6 +93,8 @@ def _frame(scene: ExplanationScene, index: int, total: int, frame: int, frames_p
     for line in _lines(scene.visual_text, 24, 4):
         draw.text((145, y), line, font=_font(34, True), fill="#344d9a")
         y += 52
+    if scene.visual.startswith("knowledge_"):
+        _draw_knowledge_visual(draw, scene.visual, frame)
     y = 575
     for line in _lines(scene.narration, 46, 2):
         draw.text((100, y), line, font=_font(21), fill="#536176")

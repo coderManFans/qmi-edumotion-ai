@@ -51,3 +51,22 @@ def test_renderer_rejects_invalid_or_overlong_audio_segments(monkeypatch, tmp_pa
         video_renderer.render_explanation_video(
             "job-test", [scene], scene_durations=[duration]
         )
+def test_square_problem_uses_geometry_animation_template():
+    scenes = to_scenes(_local_solution("一个正方形周长是16，求边长是多少？"), "一个正方形周长是16，求边长是多少？")
+    assert scenes[0].visual == "knowledge_square"
+    frame = _frame(scenes[0], 0, len(scenes), 1, 12)
+    assert isinstance(frame, Image.Image)
+
+
+def test_travel_problem_uses_journey_animation_template():
+    scenes = to_scenes(_local_solution("路程是180千米，速度是60千米/小时，时间是多少小时？"), "路程是180千米，速度是60千米/小时，时间是多少小时？")
+    assert scenes[0].visual == "knowledge_journey"
+    frame = _frame(scenes[0], 0, len(scenes), 1, 12)
+    assert isinstance(frame, Image.Image)
+
+
+def test_sharing_problem_uses_equal_groups_animation_template():
+    scenes = to_scenes(_local_solution("小明有12个苹果，平均分给3个同学，每人几个？"), "小明有12个苹果，平均分给3个同学，每人几个？")
+    assert scenes[0].visual == "knowledge_sharing"
+
+

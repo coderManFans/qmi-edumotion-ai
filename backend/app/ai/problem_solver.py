@@ -1,5 +1,6 @@
 import ast
 import json
+import math
 import operator
 import re
 from typing import Literal
@@ -129,6 +130,369 @@ def _local_solution(problem: str) -> SolvedProblem:
     text = re.sub(r"\s+", "", problem)
     numbers = re.findall(r"(?<![A-Za-z])\d+(?:\.\d+)?", text)
     values = [float(n) for n in numbers]
+
+    # --- Semantic, inverse and unit-aware rules (run before positional fallbacks). ---
+    def labeled(label: str):
+        match = re.search(rf"(?<!周){label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
+        return float(match.group(1)) if match else None
+
+    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
+        return SolvedProblem(
+            answer=None, verification_status="unverified",
+            explanation="题目没有说明面积单位，无法给出完整的长度单位答案。",
+            steps=[
+                SolvedStep(title="提取条件", explanation="只知道正方形面积的数值，未给面积单位。", narration="题目没有说明面积单位。", visual_text="面积单位缺失"),
+                SolvedStep(title="检查单位", explanation="面积单位与边长单位相关，缺少单位信息。", narration="即使能求出边长数值，也无法确定它应使用什么长度单位。", visual_text="单位信息不足"),
+                SolvedStep(title="暂不作答", explanation="需要补充面积单位。", narration="请补充面积单位后再计算。", visual_text="等待补充单位"),
+            ],
+        )
+
+    # Reverse geometry: known area and one dimension.
+    if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text):
+        area = labeled("面积")
+        if area is not None and area >= 0:
+            side = math.sqrt(area)
+            if math.isclose(side, round(side), abs_tol=1e-9):
+                side = round(side)
+                unit = "厘米" if "厘米" in text else "米" if "米" in text else ""
+                return _steps_for_formula(
+                    known=f"正方形面积 = {_number_text(area)}平方{unit or '单位'}",
+                    formula="面积 = 边长 × 边长",
+                    rearranged="边长 = √面积",
+                    substitution=f"√{_number_text(area)}",
+                    result=side, unit=unit, conclusion="正方形的边长",
+                    verification=f"{_number_text(side)} × {_number_text(side)} = {_number_text(area)}，与已知面积相符",
+                )
+
+    if "长方形" in text and "面积" in text and re.search(r"宽.*多少|求.*宽|长.*多少|求.*长", text):
+        area = labeled("面积")
+        length = labeled("长")
+        width = labeled("宽")
+        if area is not None and length is not None and width is None and length > 0 and area >= 0:
+            result = area / length
+            unit = "厘米" if "厘米" in text else "米" if "米" in text else ""
+            return _steps_for_formula(
+                known=f"面积 = {_number_text(area)}平方{unit or '单位'}，长 = {_number_text(length)}{unit}",
+                formula="长方形面积 = 长 × 宽",
+                rearranged="宽 = 面积 ÷ 长",
+                substitution=f"{_number_text(area)} ÷ {_number_text(length)}",
+                result=result, unit=unit, conclusion="长方形的宽",
+                verification=f"{_number_text(length)} × {_number_text(result)} = {_number_text(area)}，与已知面积相符",
+            )
+        if area is not None and width is not None and length is None and width > 0 and area >= 0:
+            result = area / width
+            unit = "厘米" if "厘米" in text else "米" if "米" in text else ""
+            return _steps_for_formula(
+                known=f"面积 = {_number_text(area)}平方{unit or '单位'}，宽 = {_number_text(width)}{unit}",
+                formula="长方形面积 = 长 × 宽",
+                rearranged="长 = 面积 ÷ 宽",
+                substitution=f"{_number_text(area)} ÷ {_number_text(width)}",
+                result=result, unit=unit, conclusion="长方形的长",
+                verification=f"{_number_text(result)} × {_number_text(width)} = {_number_text(area)}，与已知面积相符",
+            )
+
+    # Rectangle perimeter -> missing side -> area is a two-step problem.
+    if "长方形" in text and "周长" in text and "面积" in text:
+        perimeter, length, width = labeled("周长"), labeled("长"), labeled("宽")
+        if perimeter is not None and length is not None and width is None:
+            width = perimeter / 2 - length
+            if width >= 0:
+                area = length * width
+                unit = "厘米" if "厘米" in text else "米" if "米" in text else ""
+                return SolvedProblem(
+                    answer=f"{_number_text(area)}平方{unit or '单位'}",
+                    verification_status="verified",
+                    explanation="先由周长求出未知的宽，再用长乘宽求面积。",
+                    steps=[
+                        SolvedStep(title="提取条件", explanation=f"周长={_number_text(perimeter)}，长={_number_text(length)}", narration=f"已知长方形周长{_number_text(perimeter)}{unit}，长{_number_text(length)}{unit}。", visual_text=f"周长 {_number_text(perimeter)}；长 {_number_text(length)}"),
+                        SolvedStep(title="先求宽", explanation="宽=周长÷2−长", narration="长方形的周长等于长和宽之和的2倍，所以先用周长除以2，再减去长。", visual_text=f"{_number_text(perimeter)} ÷ 2 − {_number_text(length)} = {_number_text(width)}"),
+                        SolvedStep(title="再求面积", explanation="面积=长×宽", narration=f"现在知道宽是{_number_text(width)}{unit}，再用长乘宽。", visual_text=f"{_number_text(length)} × {_number_text(width)} = {_number_text(area)}"),
+                        SolvedStep(title="验证", explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；长×宽={_number_text(area)}", narration="把长和宽代回周长公式，周长正确；再计算面积，得到最终答案。", visual_text=f"答案：{_number_text(area)}平方{unit or '单位'}"),
+                    ],
+                )
+
+    # Inverse unit-price relation: total price / unit price = quantity.
+    if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计", text):
+        total, price = labeled("总价"), labeled("单价")
+        if total is not None and price is not None and price > 0 and total >= 0:
+            quantity = total / price
+            if math.isclose(quantity, round(quantity), abs_tol=1e-9):
+                quantity = round(quantity)
+                return _steps_for_formula(
+                    known=f"总价 = {_number_text(total)}元，单价 = {_number_text(price)}元",
+                    formula="总价 = 单价 × 数量",
+                    rearranged="数量 = 总价 ÷ 单价",
+                    substitution=f"{_number_text(total)} ÷ {_number_text(price)}",
+                    result=quantity, unit=("支" if "支" in text else "本" if "本" in text else "个" if "个" in text else "件"), conclusion="购买的数量",
+                    verification=f"{_number_text(price)} × {_number_text(quantity)} = {_number_text(total)}元",
+                )
+
+    # Inverse travel relation: time = distance / speed.
+    if re.search(r"时间|几小时|多少小时|需要多久", text) and re.search(r"路程|距离", text) and re.search(r"速度|每小时|千米/小时|公里/小时", text):
+        distance, speed = labeled("路程"), labeled("速度")
+        if distance is not None and speed is not None and speed > 0 and distance >= 0:
+            time_value = distance / speed
+            return _steps_for_formula(
+                known=f"路程 = {_number_text(distance)}，速度 = {_number_text(speed)}",
+                formula="路程 = 速度 × 时间",
+                rearranged="时间 = 路程 ÷ 速度",
+                substitution=f"{_number_text(distance)} ÷ {_number_text(speed)}",
+                result=time_value, unit="小时", conclusion="行驶时间",
+                verification=f"{_number_text(speed)} × {_number_text(time_value)} = {_number_text(distance)}",
+            )
+
+    # Fraction word problems: explicitly identify the whole and the fraction.
+    fraction_match = re.search(r"(?:一个数|这本书|全程|全班|总数|原有量)?的?(\d+)\s*/\s*(\d+)是(\d+(?:\.\d+)?)", text)
+    if fraction_match and re.search(r"这个数|原来|总数|全程|一共|整体", text):
+        numerator, denominator, part = map(float, fraction_match.groups())
+        if denominator > 0 and 0 < numerator <= denominator:
+            whole = part * denominator / numerator
+            return _steps_for_formula(
+                known=f"对应分率 = {_number_text(numerator)}/{_number_text(denominator)}，对应部分量 = {_number_text(part)}",
+                formula="部分量 = 单位“1” × 对应分率",
+                rearranged="单位“1” = 部分量 ÷ 对应分率",
+                substitution=f"{_number_text(part)} ÷ ({_number_text(numerator)}/{_number_text(denominator)})",
+                result=whole, unit="", conclusion="单位“1”所表示的整体量",
+                verification=f"{_number_text(whole)} × {_number_text(numerator)}/{_number_text(denominator)} = {_number_text(part)}",
+            )
+
+    # Percentage: find the whole when a known percentage of it is given.
+    percent_whole = re.search(r"(?:一个数|原价|原来|原有量)?的?(\d+(?:\.\d+)?)%是(\d+(?:\.\d+)?)", text)
+    if percent_whole and re.search(r"这个数|原来|原价|原有量|单位1|整体", text):
+        rate, part = map(float, percent_whole.groups())
+        if 0 < rate <= 100:
+            whole = part / (rate / 100)
+            return _steps_for_formula(
+                known=f"对应百分率 = {_number_text(rate)}%，对应部分量 = {_number_text(part)}",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="整体量 = 部分量 ÷ 百分率",
+                substitution=f"{_number_text(part)} ÷ {_number_text(rate / 100)}",
+                result=whole, unit="", conclusion="原来的整体量（单位“1”）",
+                verification=f"{_number_text(whole)} × {_number_text(rate)}% = {_number_text(part)}",
+            )
+
+    # Direct fraction/percentage of an explicitly named whole.
+    direct_fraction = re.search(r"(\d+(?:\.\d+)?)的(\d+)\s*/\s*(\d+)(?:是多少|是几)", text)
+    if direct_fraction:
+        whole, numerator, denominator = map(float, direct_fraction.groups())
+        if denominator > 0 and 0 <= numerator <= denominator:
+            part = whole * numerator / denominator
+            return _steps_for_formula(
+                known=f"单位“1” = {_number_text(whole)}，对应分率 = {_number_text(numerator)}/{_number_text(denominator)}",
+                formula="部分量 = 单位“1” × 对应分率",
+                rearranged="部分量 = 单位“1” × 对应分率",
+                substitution=f"{_number_text(whole)} × {_number_text(numerator)}/{_number_text(denominator)}",
+                result=part, unit="", conclusion="对应的部分量",
+                verification=f"{_number_text(part)} ÷ {_number_text(whole)} = {_number_text(numerator / denominator)}",
+            )
+
+    # Unit conversion with dimensional safeguards.
+    unit_groups = {
+        "length": {"千米":1000.0,"公里":1000.0,"米":1.0,"分米":0.1,"厘米":0.01,"毫米":0.001},
+        "area": {"平方千米":1_000_000.0,"公顷":10_000.0,"平方米":1.0,"平方分米":0.01,"平方厘米":0.0001,"平方毫米":0.000001},
+        "volume": {"立方米":1.0,"立方分米":0.001,"立方厘米":0.000001,"升":0.001,"毫升":0.000001},
+        "time": {"小时":3600.0,"分钟":60.0,"秒":1.0},
+        "mass": {"吨":1000.0,"千克":1.0,"公斤":1.0,"克":0.001},
+    }
+    conversion_match = re.search(r"(\d+(?:\.\d+)?)\s*(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
+    target_match = re.search(r"(?:换算成|化成|等于多少|是多少)(平方千米|平方分米|平方厘米|平方毫米|平方米|公顷|立方米|立方分米|立方厘米|千米|公里|分米|厘米|毫米|米|小时|分钟|秒|吨|千克|公斤|克|升|毫升)", text)
+    if conversion_match and target_match:
+        amount = float(conversion_match.group(1))
+        source_unit, target_unit = conversion_match.group(2), target_match.group(1)
+        dimension = next((key for key, units in unit_groups.items() if source_unit in units), None)
+        target_dimension = next((key for key, units in unit_groups.items() if target_unit in units), None)
+        if dimension and dimension == target_dimension:
+            converted = amount * unit_groups[dimension][source_unit] / unit_groups[dimension][target_unit]
+            return _steps_for_formula(
+                known=f"{_number_text(amount)}{source_unit}",
+                formula=f"1{source_unit} = {unit_groups[dimension][source_unit] / unit_groups[dimension][target_unit]:g}{target_unit}",
+                rearranged=f"目标数值 = 原数值 × 单位进率",
+                substitution=f"{_number_text(amount)} × {unit_groups[dimension][source_unit] / unit_groups[dimension][target_unit]:g}",
+                result=converted, unit=target_unit, conclusion="换算后的数量",
+                verification=f"{_number_text(converted)}{target_unit}换回{source_unit}等于{_number_text(amount)}{source_unit}",
+            )
+        # Explicitly reject incompatible dimensions rather than guessing.
+        if dimension and target_dimension and dimension != target_dimension:
+            return SolvedProblem(
+                answer=None, verification_status="unverified",
+                explanation="题目给出的原单位和目标单位不属于同一量纲，无法直接换算。",
+                steps=[
+                    SolvedStep(title="识别原单位", explanation=f"原单位是{source_unit}，属于{dimension}。", narration=f"先识别原单位{source_unit}。", visual_text=source_unit),
+                    SolvedStep(title="识别目标单位", explanation=f"目标单位是{target_unit}，属于{target_dimension}。", narration=f"目标单位是{target_unit}，它与原单位量纲不同。", visual_text=target_unit),
+                    SolvedStep(title="停止不合理换算", explanation="不能把不同量纲的单位直接换算。", narration="这两个单位不能直接互换，请检查题目。", visual_text="单位量纲不一致"),
+                ],
+            )
+
+    # Multi-step equal groups followed by a change (e.g. boxes, packets, sharing).
+    multi = re.search(r"(\d+)箱.*每箱(\d+)(?:瓶|个|本|支).*?(?:卖出|用去|拿走|送出)(\d+).*?(?:还剩|剩下)", text)
+    if multi:
+        groups, each, removed = map(float, multi.groups())
+        total = groups * each
+        remaining = total - removed
+        if remaining >= 0:
+            return SolvedProblem(
+                answer=_number_text(remaining), verification_status="verified",
+                explanation="先求若干相同包装的总数，再减去用去的数量。",
+                steps=[
+                    SolvedStep(title="提取条件", explanation=f"箱数={_number_text(groups)}，每箱={_number_text(each)}，卖出={_number_text(removed)}", narration="先整理箱数、每箱数量和卖出的数量。", visual_text=f"{_number_text(groups)}箱 × 每箱{_number_text(each)}"),
+                    SolvedStep(title="求原有总数", explanation="总数=箱数×每箱数量", narration="先求一共有多少，再考虑卖出了多少。", visual_text=f"{_number_text(groups)} × {_number_text(each)} = {_number_text(total)}"),
+                    SolvedStep(title="求剩余数量", explanation="剩余=原有总数−卖出数量", narration=f"再从总数{_number_text(total)}中减去卖出的{_number_text(removed)}。", visual_text=f"{_number_text(total)} − {_number_text(removed)} = {_number_text(remaining)}"),
+                    SolvedStep(title="验证", explanation=f"{_number_text(remaining)}+{_number_text(removed)}={_number_text(total)}", narration="把剩余数量和卖出数量加起来，能还原原有总数。", visual_text=f"答案：{_number_text(remaining)}"),
+                ],
+            )
+
+
+    # Triangle area: the prompt must explicitly provide base and height.
+    if "三角形" in text and "面积" in text and len(values) == 2 and re.search(r"底.*高|高.*底", text):
+        base, height = values
+        if base >= 0 and height >= 0:
+            area = base * height / 2
+            return _steps_for_formula(
+                known=f"底 = {_number_text(base)}，高 = {_number_text(height)}",
+                formula="三角形面积 = 底 × 高 ÷ 2",
+                rearranged="面积 = 底 × 高 ÷ 2",
+                substitution=f"{_number_text(base)} * {_number_text(height)} / 2",
+                result=area,
+                unit="平方单位",
+                conclusion="三角形的面积",
+                verification=f"{_number_text(base)} × {_number_text(height)} ÷ 2 = {_number_text(area)}",
+            )
+
+    # Parallelogram area: require explicit base and perpendicular height wording.
+    if "平行四边形" in text and "面积" in text and len(values) == 2 and re.search(r"底.*高|高.*底", text):
+        base, height = values
+        if base >= 0 and height >= 0:
+            area = base * height
+            return _steps_for_formula(
+                known=f"底 = {_number_text(base)}，高 = {_number_text(height)}",
+                formula="平行四边形面积 = 底 × 高",
+                rearranged="面积 = 底 × 高",
+                substitution=f"{_number_text(base)} * {_number_text(height)}",
+                result=area,
+                unit="平方单位",
+                conclusion="平行四边形的面积",
+                verification=f"{_number_text(base)} × {_number_text(height)} = {_number_text(area)}",
+            )
+
+    # Trapezoid area: require upper base, lower base and height.
+    if "梯形" in text and "面积" in text and len(values) == 3 and re.search(r"上底.*下底.*高|下底.*上底.*高|上底.*高.*下底", text):
+        upper, lower, height = values
+        if min(upper, lower, height) >= 0:
+            area = (upper + lower) * height / 2
+            return _steps_for_formula(
+                known=f"上底 = {_number_text(upper)}，下底 = {_number_text(lower)}，高 = {_number_text(height)}",
+                formula="梯形面积 = (上底 + 下底) × 高 ÷ 2",
+                rearranged="面积 = (上底 + 下底) × 高 ÷ 2",
+                substitution=f"({_number_text(upper)} + {_number_text(lower)}) * {_number_text(height)} / 2",
+                result=area,
+                unit="平方单位",
+                conclusion="梯形的面积",
+                verification=f"({_number_text(upper)} + {_number_text(lower)}) × {_number_text(height)} ÷ 2 = {_number_text(area)}",
+            )
+
+    # Distance = speed × time. Require explicit semantic labels to avoid guessing number roles.
+    if len(values) == 2 and re.search(r"速度|每小时|每分钟", text) and re.search(r"时间|小时|分钟", text) and re.search(r"求路程|路程是多少|行驶多远|多少千米|多少米", text) and not re.search(r"求速度|速度是多少|求时间|时间是多少|需要多久", text):
+        speed, duration = values
+        if speed >= 0 and duration >= 0:
+            distance = speed * duration
+            return _steps_for_formula(
+                known=f"速度 = {_number_text(speed)}，时间 = {_number_text(duration)}",
+                formula="路程 = 速度 × 时间",
+                rearranged="路程 = 速度 × 时间",
+                substitution=f"{_number_text(speed)} * {_number_text(duration)}",
+                result=distance,
+                unit=("千米" if "千米" in text or "公里" in text else "米" if "米" in text else ""),
+                conclusion="行驶的路程",
+                verification=f"{_number_text(distance)} ÷ {_number_text(duration)} = {_number_text(speed)}（速度复核）" if duration else "时间为0，路程也为0",
+            )
+
+    # Unit price × quantity = total price.
+    if len(values) == 2 and re.search(r"单价|每支|每个|每本|每千克|每斤", text) and re.search(r"总价|一共.*元|共.*元|买了.*个|买.*支|买.*本", text):
+        unit_price, quantity = values
+        if unit_price >= 0 and quantity >= 0:
+            total = unit_price * quantity
+            return _steps_for_formula(
+                known=f"单价 = {_number_text(unit_price)}，数量 = {_number_text(quantity)}",
+                formula="总价 = 单价 × 数量",
+                rearranged="总价 = 单价 × 数量",
+                substitution=f"{_number_text(unit_price)} * {_number_text(quantity)}",
+                result=total,
+                unit="元",
+                conclusion="需要支付的总价",
+                verification=f"{_number_text(total)} ÷ {_number_text(quantity) if quantity else '数量'} = {_number_text(unit_price)}（单价复核）" if quantity else "数量为0，总价也为0",
+            )
+
+    # Average = sum / count; require explicit total and number of items.
+    if len(values) == 2 and re.search(r"平均数|平均每人|平均每组|平均成绩", text) and re.search(r"总和|一共|总数|人数|个数据|几个人|几组", text):
+        total, count = values
+        if total >= 0 and count > 0:
+            average = total / count
+            return _steps_for_formula(
+                known=f"总和 = {_number_text(total)}，份数 = {_number_text(count)}",
+                formula="平均数 = 总和 ÷ 份数",
+                rearranged="平均数 = 总和 ÷ 份数",
+                substitution=f"{_number_text(total)} / {_number_text(count)}",
+                result=average,
+                unit="",
+                conclusion="平均数",
+                verification=f"{_number_text(average)} × {_number_text(count)} = {_number_text(total)}",
+            )
+
+    # Percentage of a known whole: e.g. 200的20%是多少.
+    direct_percent = re.search(r"(\d+(?:\.\d+)?)的(\d+(?:\.\d+)?)%", text)
+    if direct_percent and re.search(r"是多少|求.*多少", text) and not ("涨价" in text and "降价" in text):
+        whole = float(direct_percent.group(1))
+        percent_match = re.search(r"(\d+(?:\.\d+)?)%", text)
+        if percent_match:
+            rate = float(percent_match.group(1)) / 100
+        else:
+            chinese_rate = re.search(r"百分之(\d+(?:\.\d+)?)", text)
+            rate = float(chinese_rate.group(1)) / 100 if chinese_rate else None
+        if rate is not None and whole >= 0 and 0 <= rate <= 1:
+            result = whole * rate
+            return _steps_for_formula(
+                known=f"整体量 = {_number_text(whole)}，百分率 = {_number_text(rate * 100)}%",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="部分量 = 整体量 × 百分率",
+                substitution=f"{_number_text(whole)} * {_number_text(rate)}",
+                result=result,
+                unit="",
+                conclusion="对应的部分量",
+                verification=f"{_number_text(result)} ÷ {_number_text(whole) if whole else '整体量'} = {_number_text(rate * 100)}%" if whole else "整体量为0，部分量也为0",
+            )
+
+    # Circle circumference / area with an explicit radius or diameter.
+    if "圆" in text and len(values) == 1 and ("周长" in text or "面积" in text):
+        measure = values[0]
+        if measure >= 0 and "半径" in text:
+            radius = measure
+        elif measure >= 0 and "直径" in text:
+            radius = measure / 2
+        else:
+            radius = None
+        if radius is not None:
+            if "周长" in text:
+                result = 2 * 3.14 * radius
+                formula = "圆周长 = 2 × 3.14 × 半径"
+                substitution = f"2 * 3.14 * {_number_text(radius)}"
+                unit = ""
+                conclusion = "圆的周长（π按3.14近似计算）"
+            else:
+                result = 3.14 * radius * radius
+                formula = "圆面积 = 3.14 × 半径 × 半径"
+                substitution = f"3.14 * {_number_text(radius)} * {_number_text(radius)}"
+                unit = "平方单位"
+                conclusion = "圆的面积（π按3.14近似计算）"
+            return _steps_for_formula(
+                known=f"半径 = {_number_text(radius)}（π按3.14近似）",
+                formula=formula,
+                rearranged=formula,
+                substitution=substitution,
+                result=result,
+                unit=unit,
+                conclusion=conclusion,
+                verification=f"按π≈3.14重新代入，结果为{_number_text(result)}",
+            )
 
     # Square: one side is unknown, perimeter is known.
     if "正方形" in text and ("周长" in text or "一周" in text) and len(values) == 1 and re.search(r"求.*边长|边长.*多少", text):
@@ -332,12 +696,29 @@ async def solve_problem(problem: str) -> SolvedProblem:
 
 def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationScene]:
     visual_types = ["highlight", "step", "answer", "check"]
+    compact = re.sub(r"\s+", "", original_text)
+    if "正方形" in compact:
+        knowledge_visual = "knowledge_square"
+    elif "长方形" in compact:
+        knowledge_visual = "knowledge_rectangle"
+    elif any(token in compact for token in ("行程", "速度", "路程", "千米/小时", "公里/小时")):
+        knowledge_visual = "knowledge_journey"
+    elif any(token in compact for token in ("平均分", "每人", "分给", "平分")):
+        knowledge_visual = "knowledge_sharing"
+    elif "/" in compact or "分数" in compact:
+        knowledge_visual = "knowledge_fraction"
+    elif "%" in compact or "百分之" in compact or "折扣" in compact:
+        knowledge_visual = "knowledge_percentage"
+    elif any(token in compact for token in ("换算", "等于多少平方", "等于多少立方")):
+        knowledge_visual = "knowledge_conversion"
+    else:
+        knowledge_visual = "step"
     scenes = [
         ExplanationScene(
             id=f"scene-{i + 1}",
             title=step.title,
             narration=step.narration,
-            visual=visual_types[min(i, len(visual_types) - 1)],
+            visual=knowledge_visual if knowledge_visual != "step" else visual_types[min(i, len(visual_types) - 1)],
             visual_text=step.visual_text,
             expression=step.expression,
         )
@@ -347,7 +728,7 @@ def to_scenes(solution: SolvedProblem, original_text: str) -> list[ExplanationSc
         id="scene-0",
         title="题目呈现",
         narration="我们先完整读一遍题目，明确已知条件和所求问题。",
-        visual="question",
+        visual=knowledge_visual if knowledge_visual != "step" else "question",
         visual_text=original_text[:100],
     ))
     if solution.answer is not None and solution.verification_status == "verified":

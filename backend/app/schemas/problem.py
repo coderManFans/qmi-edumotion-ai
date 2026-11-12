@@ -7,7 +7,7 @@ class ExplanationScene(BaseModel):
     id: str
     title: str
     narration: str
-    visual: Literal["question", "highlight", "step", "answer", "check"]
+    visual: Literal["question", "highlight", "step", "answer", "check", "knowledge_square", "knowledge_rectangle", "knowledge_journey", "knowledge_sharing", "knowledge_fraction", "knowledge_percentage", "knowledge_conversion"]
     visual_text: str
     expression: str | None = None
 
