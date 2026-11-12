@@ -283,7 +283,7 @@ def _local_solution(problem: str) -> SolvedProblem:
 
     # Inverse unit-price relation: total price / unit price = quantity.
     if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计|花了", text):
-        total_match = re.search(r"(?:总价(?:是|为)?|一共(?:花了|是|为)?|共计(?:是|为)?|花了)(\\d+(?:\\.\\d+)?)元?", text)
+        total_match = re.search(r"(?:总价(?:是|为)?|一共(?:花了|是|为)?|共计(?:是|为)?|花了)(\d+(?:\.\d+)?)元?", text)
         total = float(total_match.group(1)) if total_match else labeled("总价")
         price = labeled("单价")
         if total is not None and price is not None and price > 0 and total >= 0:
@@ -315,11 +315,11 @@ def _local_solution(problem: str) -> SolvedProblem:
     if re.search(r"时间|几小时|多少小时|需要多久", text) and re.search(r"路程|距离|行驶", text) and re.search(r"速度|每小时|千米/小时|公里/小时", text):
         distance = labeled("路程") or labeled("距离")
         if distance is None:
-            travel_match = re.search(r"(?:行驶了|行驶)(\\d+(?:\\.\\d+)?)(?:千米|公里|米)?", text)
+            travel_match = re.search(r"(?:行驶了|行驶)(\d+(?:\.\d+)?)(?:千米|公里|米)?", text)
             distance = float(travel_match.group(1)) if travel_match else None
         speed = labeled("速度")
         if speed is None:
-            speed_match = re.search(r"速度(?:是|为)?(\\d+(?:\\.\\d+)?)", text)
+            speed_match = re.search(r"速度(?:是|为)?(\d+(?:\.\d+)?)", text)
             speed = float(speed_match.group(1)) if speed_match else None
         if distance is not None and speed is not None and speed > 0 and distance >= 0:
             time_value = distance / speed
