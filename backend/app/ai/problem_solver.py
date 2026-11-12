@@ -152,15 +152,15 @@ def _local_solution(problem: str) -> SolvedProblem:
     if "正方形" in text and "面积" in text and re.search(r"绳子|绳长|绳索|绕.{0,3}一圈|围.{0,3}一圈", text):
         area = labeled("面积")
         rope_match = re.search(
-            r"(?:绳子|绳长|绳索)(?:长|长度为|长度是)?(\\d+(?:\\.\\d+)?)(千米|公里|米|分米|厘米|毫米)?"
-            r"|长(\\d+(?:\\.\\d+)?)(千米|公里|米|分米|厘米|毫米)的绳子",
+            r"(?:绳子|绳长|绳索)(?:长|长度为|长度是)?(\d+(?:\\.\d+)?)(千米|公里|米|分米|厘米|毫米)?"
+            r"|长(\d+(?:\\.\d+)?)(千米|公里|米|分米|厘米|毫米)的绳子",
             text,
         )
         if rope_match:
             rope_value = float(rope_match.group(1) or rope_match.group(3))
             rope_unit = rope_match.group(2) or rope_match.group(4) or ""
         else:
-            fallback_rope = re.search(r"长(\\d+(?:\\.\\d+)?)的绳子", text)
+            fallback_rope = re.search(r"长(\d+(?:\\.\d+)?)的绳子", text)
             rope_value = float(fallback_rope.group(1)) if fallback_rope else None
             rope_unit = ""
         area_unit_match = re.search(r"平方(千米|公里|米|分米|厘米|毫米)", text)
