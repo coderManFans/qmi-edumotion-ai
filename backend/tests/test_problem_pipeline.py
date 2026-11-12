@@ -261,6 +261,25 @@ def test_primary_math_benchmark_has_exactly_50_cases_and_matches_solver():
         solved = _local_solution(case["problem"])
         assert solved.verification_status == case["verification_status"], case["id"]
         assert solved.answer == case["standard_answer"], case["id"]
+        assert len(solved.steps) >= 2, case["id"]
+        narration = "\\n".join(step.narration for step in solved.steps)
+        teaching_content = "\\n".join(
+            f"{step.title} {step.explanation} {step.narration} {step.visual_text}"
+            for step in solved.steps
+        )
+        assert all(step.narration.strip() for step in solved.steps), case["id"]
+        if case["verification_status"] == "verified":
+            assert any(char.isdigit() for char in teaching_content), case["id"]
+            assert any(token in teaching_content for token in (
+                "公式", "关系", "面积", "周长", "速度", "分率", "单位", "总价",
+                "×", "÷", "+", "-", "√"
+            )), case["id"]
+            assert any(token in teaching_content for token in (
+                "验证", "符合", "答案", "相符", "还原"
+            )), case["id"]
+        else:
+            assert solved.answer is None, case["id"]
+            assert any(token in narration for token in ("缺少", "不足", "无法", "不能", "需要")), case["id"]
 
 
 def test_benchmark_cases_have_complete_teaching_and_source_metadata():
