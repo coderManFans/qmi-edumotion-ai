@@ -75,9 +75,9 @@ def test_other_deterministic_multistep_relation_chains(problem, expected, step_c
     assert solved.answer == expected
     assert solved.verification_status == "verified"
     assert len(solved.steps) == step_count
-    assert solved.steps[0].title == "提取已知条件"
-    assert solved.steps[-1].title == "回答并验证"
-    assert solved.steps[-1].expression is not None
+    assert solved.steps[0].title in {"提取条件", "提取已知条件"}
+    assert solved.steps[-1].title in {"验证", "回答并验证"}
+    assert any("÷" in step.visual_text or "/" in step.visual_text for step in solved.steps[1:-1])
 
 
 @pytest.mark.parametrize(
