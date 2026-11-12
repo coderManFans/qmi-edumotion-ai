@@ -147,6 +147,66 @@ def _local_solution(problem: str) -> SolvedProblem:
             ],
         )
 
+    # Multi-step square-rope problem: area -> side -> perimeter -> length comparison.
+    # This is intentionally deterministic and does not depend on the LLM.
+    if "正方形" in text and "面积" in text and re.search(r"绳子|绳长|绳索|绕.{0,3}一圈|围.{0,3}一圈", text):
+        area = labeled("面积")
+        rope_match = re.search(
+            r"(?:绳子|绳长|绳索)(?:长|长度为|长度是)?(\\d+(?:\\.\\d+)?)(千米|公里|米|分米|厘米|毫米)?"
+            r"|长(\\d+(?:\\.\\d+)?)(千米|公里|米|分米|厘米|毫米)的绳子",
+            text,
+        )
+        if rope_match:
+            rope_value = float(rope_match.group(1) or rope_match.group(3))
+            rope_unit = rope_match.group(2) or rope_match.group(4) or ""
+        else:
+            fallback_rope = re.search(r"长(\\d+(?:\\.\\d+)?)的绳子", text)
+            rope_value = float(fallback_rope.group(1)) if fallback_rope else None
+            rope_unit = ""
+        area_unit_match = re.search(r"平方(千米|公里|米|分米|厘米|毫米)", text)
+        area_unit = area_unit_match.group(1) if area_unit_match else ""
+        if area is not None and rope_value is not None and area >= 0 and rope_value >= 0:
+            if (area_unit and rope_unit and area_unit != rope_unit) or (area_unit and not rope_unit) or (rope_unit and not area_unit):
+                return SolvedProblem(
+                    answer=None, verification_status="unverified",
+                    explanation="面积单位与绳长单位必须对应一致；当前题目缺少单位或单位不一致，不能直接比较。",
+                    steps=[
+                        SolvedStep(title="识别面积", explanation=f"正方形面积为{_number_text(area)}，面积单位信息需要与绳长对应。", narration="先确认正方形的面积单位。", visual_text=f"面积：{_number_text(area)}"),
+                        SolvedStep(title="识别绳长", explanation=f"绳长为{_number_text(rope_value)}，需要确认它与面积单位对应的长度单位一致。", narration="再确认绳子的长度单位。", visual_text=f"绳长：{_number_text(rope_value)}"),
+                        SolvedStep(title="暂不比较", explanation="单位信息不完整或不一致，请补充统一单位。", narration="单位没有统一前，不能判断绳子是否足够长。", visual_text="需要统一单位"),
+                    ],
+                )
+            side = math.sqrt(area)
+            if not math.isclose(side, round(side), abs_tol=1e-9):
+                return SolvedProblem(
+                    answer=None, verification_status="unverified",
+                    explanation="正方形面积不是完全平方数，当前小学整数长度规则无法给出精确边长，暂不作近似判断。",
+                    steps=[
+                        SolvedStep(title="提取条件", explanation=f"正方形面积为{_number_text(area)}。", narration="先读取正方形面积。", visual_text=f"面积 = {_number_text(area)}"),
+                        SolvedStep(title="反求边长", explanation="边长需要等于面积的平方根，但结果不是整数。", narration="需要先求面积的平方根；当前规则不擅自把它近似成整数。", visual_text=f"边长 = √{_number_text(area)}"),
+                        SolvedStep(title="等待精确条件", explanation="请确认是否接受小数近似，或补充可得到精确边长的条件。", narration="为了保证判断可靠，暂不猜测最终结果。", visual_text="边长暂无法精确确定"),
+                    ],
+                )
+            side = float(round(side))
+            perimeter = side * 4
+            difference = abs(perimeter - rope_value)
+            enough = rope_value >= perimeter
+            length_unit = rope_unit or area_unit or ""
+            unit_suffix = length_unit if length_unit else "（同一长度单位）"
+            answer = ("能" if enough else "不能") + (f"，" + ("多" if enough else "还差") + _number_text(difference) + unit_suffix if difference else "，刚好够")
+            return SolvedProblem(
+                answer=answer,
+                verification_status="verified",
+                explanation="先由正方形面积反求边长，再求周长，最后将绳长与周长比较。",
+                steps=[
+                    SolvedStep(title="提取已知条件", explanation=f"正方形面积={_number_text(area)}；绳长={_number_text(rope_value)}。", narration=f"题目告诉我们正方形面积是{_number_text(area)}，绳子长{_number_text(rope_value)}。", visual_text=f"面积 {_number_text(area)}；绳长 {_number_text(rope_value)}"),
+                    SolvedStep(title="先求正方形边长", explanation="正方形面积=边长×边长，所以边长=√面积。", narration="正方形四条边一样长。面积等于边长乘边长，所以用面积开平方，求出边长。", visual_text=f"√{_number_text(area)} = {_number_text(side)}"),
+                    SolvedStep(title="再求正方形周长", explanation="正方形周长=边长×4。", narration=f"知道一条边长是{_number_text(side)}后，乘以4，得到绕正方形一圈需要的长度。", visual_text=f"{_number_text(side)} × 4 = {_number_text(perimeter)}"),
+                    SolvedStep(title="比较绳长与周长", explanation=f"绳长{_number_text(rope_value)} {'≥' if enough else '<'} 周长{_number_text(perimeter)}，因此{answer}。", narration=f"绕一圈需要{_number_text(perimeter)}，绳子只有{_number_text(rope_value)}，所以{answer}。", visual_text=f"{_number_text(rope_value)} {'≥' if enough else '<'} {_number_text(perimeter)}"),
+                    SolvedStep(title="回答并验证", explanation=f"把边长代回面积：{_number_text(side)}×{_number_text(side)}={_number_text(area)}；周长为{_number_text(perimeter)}。", narration=f"再检查面积和周长计算都正确，最终答案：{answer}。", visual_text=f"答案：{answer}", expression=f"{_number_text(side)} * 4 = {_number_text(perimeter)}"),
+                ],
+            )
+
     # Reverse geometry: known area and one dimension.
     if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text):
         area = labeled("面积")
