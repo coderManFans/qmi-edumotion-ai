@@ -8,7 +8,9 @@ from app.schemas.problem import ExplanationScene
 
 def _ffprobe_bin() -> str:
     configured = Path(settings.ffmpeg_bin)
-    return str(configured.with_name("ffprobe")) if configured.is_absolute() else "ffprobe"
+    if configured.is_absolute() or configured.parent != Path("."):
+        return str(configured.with_name("ffprobe"))
+    return "ffprobe"
 
 
 def _audio_duration(path: Path) -> float:
@@ -22,9 +24,12 @@ def _audio_duration(path: Path) -> float:
     if result.returncode:
         raise RuntimeError(f"无法读取语音时长：{result.stderr[-500:]}")
     try:
-        return max(float(result.stdout.strip()), 0.2)
+        duration = float(result.stdout.strip())
     except ValueError as exc:
         raise RuntimeError("TTS 返回的音频文件没有有效时长。") from exc
+    if not 0 < duration < float("inf"):
+        raise RuntimeError("TTS 返回的音频文件时长无效。")
+    return max(duration, 0.2)
 
 
 async def synthesize_scene_audio(
@@ -52,7 +57,14 @@ async def synthesize_scene_audio(
         communicate = edge_tts.Communicate(
             narration, voice=settings.tts_voice, rate=settings.tts_rate
         )
-        await communicate.save(str(segment))
+        try:
+            await asyncio.wait_for(
+                communicate.save(str(segment)), timeout=settings.tts_timeout_seconds
+            )
+        except asyncio.TimeoutError as exc:
+            raise RuntimeError(
+                f"第 {index + 1} 个镜头的 Edge TTS 请求超时（{settings.tts_timeout_seconds:g} 秒）。"
+            ) from exc
         if not segment.is_file() or segment.stat().st_size == 0:
             raise RuntimeError(f"第 {index + 1} 个镜头的 TTS 没有生成音频。")
         segment_paths.append(segment)

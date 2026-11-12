@@ -13,7 +13,7 @@
 
 ## 中文语音
 
-默认使用 Edge TTS 的普通话神经语音 zh-CN-XiaoxiaoNeural，无需额外 API Key，但 Worker 需要能够访问互联网。可以通过 TTS_VOICE 更换 Edge TTS 支持的中文音色，通过 TTS_RATE 调整语速。该服务依赖外部语音服务可用性；若部署环境无法访问外网，任务会失败并在任务状态接口返回错误。可将 TTS provider adapter 替换为自托管语音服务。
+默认使用 Edge TTS 的普通话神经语音 zh-CN-XiaoxiaoNeural，无需额外 API Key，但 Worker 需要能够访问互联网。可以通过 TTS_VOICE 更换 Edge TTS 支持的中文音色，通过 TTS_RATE 调整语速。单个分镜的 TTS 请求默认 60 秒超时（TTS_TIMEOUT_SECONDS）；若外部语音服务不可用或超时，任务会失败并在任务状态接口返回错误。可将 TTS provider adapter 替换为自托管语音服务。
 
 设置 TTS_PROVIDER=none 可关闭配音并生成静音视频。
 
@@ -40,6 +40,8 @@
 
     celery -A app.celery_app:celery_app worker --loglevel=info
 
+Redis Python 客户端要求为 6.1.0 或更高版本；requirements.txt 已显式约束该版本，以匹配 Celery/Kombu 的 Redis transport。后台视频任务默认软超时 15 分钟、硬超时 16 分钟，可通过 CELERY_TASK_SOFT_TIME_LIMIT_SECONDS 和 CELERY_TASK_TIME_LIMIT_SECONDS 调整；硬超时应大于软超时。
+
 ### 4. 前端
 
     cd frontend
@@ -65,7 +67,7 @@ Compose 会启动 Redis、API 和 Celery Worker。API 暴露在 http://localhost
     LLM_API_KEY=your-api-key
     LLM_MODEL=your-model-name
 
-留空时会使用本地规则解题，仅覆盖少量明确的基础数量关系题；不确定的问题不会编造答案。
+留空时会使用本地规则解题，仅覆盖少量明确的基础数量关系题；不确定的问题不会编造答案。API Key 只应放在本地 .env 或部署环境变量中，不要提交到仓库。
 
 ## API
 
@@ -81,6 +83,8 @@ Compose 会启动 Redis、API 和 Celery Worker。API 暴露在 http://localhost
 
     cd backend
     pytest
+
+GitHub Actions 还会启动临时 Redis、Celery Worker 和 FastAPI，使用本地规则题目执行一次真实异步 MP4 生成与下载，并用合成音频检查 FFmpeg/ffprobe 音画合成时长。该 CI 烟测将 TTS_PROVIDER 设为 none，不会冒充真实 Edge TTS 外网测试；Edge TTS 仍需在可访问外网的部署环境单独验证。
 
 ## 设计文档
 

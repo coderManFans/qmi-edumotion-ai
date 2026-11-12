@@ -116,20 +116,25 @@ def render_explanation_video(
 ) -> Path:
     if not shutil.which(settings.ffmpeg_bin):
         raise RuntimeError(f"未找到 FFmpeg：{settings.ffmpeg_bin}。请安装 FFmpeg 并加入 PATH。")
+    if not scenes:
+        raise ValueError("至少需要一个分镜才能生成视频。")
     output_dir = Path(settings.video_output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{job_id}.mp4"
     fps = max(6, min(settings.video_fps, 24))
     default_frames = fps * max(2, min(settings.video_scene_seconds, 8))
-    if scene_durations and len(scene_durations) != len(scenes):
-        raise ValueError("语音分段时长数量必须与分镜数量一致。")
+    if scene_durations is not None:
+        if len(scene_durations) != len(scenes):
+            raise ValueError("语音分段时长数量必须与分镜数量一致。")
+        if any(not math.isfinite(float(duration)) or duration <= 0 or duration > 120 for duration in scene_durations):
+            raise ValueError("每个分镜语音时长必须是大于 0 且不超过 120 秒的有效数值；拒绝静默截断音轨。")
 
     with tempfile.TemporaryDirectory(prefix="edumotion-render-") as tmp:
         frame_dir = Path(tmp)
         frame_number = 0
         for index, scene in enumerate(scenes):
-            duration = scene_durations[index] if scene_durations else default_frames / fps
-            frames_per_scene = max(1, min(math.ceil(max(duration, 0.2) * fps), fps * 120))
+            duration = scene_durations[index] if scene_durations is not None else default_frames / fps
+            frames_per_scene = max(1, math.ceil(max(duration, 0.2) * fps))
             for frame_index in range(frames_per_scene):
                 _frame(scene, index, len(scenes), frame_index, frames_per_scene).save(
                     frame_dir / f"frame_{frame_number:06d}.png", optimize=True

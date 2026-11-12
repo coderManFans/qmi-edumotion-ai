@@ -33,6 +33,21 @@ def _number_text(value: float) -> str:
     return f"{value:.4f}".rstrip("0").rstrip(".")
 
 
+def _area_unit(text: str) -> str:
+    """Preserve common metric length units when formatting an area answer."""
+    if "千米" in text or "公里" in text:
+        return "平方千米"
+    if "分米" in text:
+        return "平方分米"
+    if "厘米" in text or "公分" in text:
+        return "平方厘米"
+    if "毫米" in text:
+        return "平方毫米"
+    if "米" in text:
+        return "平方米"
+    return "平方单位"
+
+
 def _safe_arithmetic(expression: str) -> float:
     """Evaluate only basic arithmetic AST nodes; never use eval()."""
     operations = {
@@ -506,7 +521,7 @@ def _local_solution(problem: str) -> SolvedProblem:
                 rearranged="面积 = 边长的平方",
                 substitution=f"{_number_text(side)} * {_number_text(side)}",
                 result=area,
-                unit="平方单位",
+                unit=_area_unit(text),
                 conclusion="正方形的面积",
                 verification=f"{_number_text(side)} × {_number_text(side)} = {_number_text(area)}",
             )
@@ -523,7 +538,7 @@ def _local_solution(problem: str) -> SolvedProblem:
                     rearranged="面积 = 长 × 宽",
                     substitution=f"{_number_text(length)} * {_number_text(width)}",
                     result=area,
-                    unit="平方单位",
+                    unit=_area_unit(text),
                     conclusion="长方形的面积",
                     verification=f"{_number_text(length)} × {_number_text(width)} = {_number_text(area)}",
                 )

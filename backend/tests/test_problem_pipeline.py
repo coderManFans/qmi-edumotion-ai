@@ -23,6 +23,13 @@ def test_rectangle_area_is_solved():
     assert solved.verification_status == "verified"
 
 
+def test_rectangle_area_preserves_metric_units():
+    centimeters = _local_solution("一个长方形长8厘米，宽5厘米，求面积是多少？")
+    meters = _local_solution("一个长方形长8米，宽5米，求面积是多少？")
+    assert centimeters.answer == "40平方厘米"
+    assert meters.answer == "40平方米"
+
+
 def test_rectangle_perimeter_is_solved():
     solved = _local_solution("一个长方形长8，宽5，求周长是多少？")
     assert solved.answer == "26"
@@ -94,6 +101,20 @@ def test_unsupported_file_is_rejected():
     else:
         raise AssertionError("unsupported file should be rejected")
 
+def test_default_local_fallback_solves_chinese_rectangle_problem_without_llm(monkeypatch):
+    import asyncio
+    from app.ai.problem_solver import solve_problem
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "llm_base_url", "")
+    monkeypatch.setattr(config.settings, "llm_api_key", "")
+    monkeypatch.setattr(config.settings, "llm_model", "")
+
+    solved = asyncio.run(solve_problem("一个长方形长 8 厘米、宽 5 厘米，面积是多少？"))
+
+    assert solved.answer == "40平方厘米"
+    assert solved.verification_status == "verified"
+    assert any("8 * 5 = 40" in step.explanation for step in solved.steps)
 def test_triangle_area_formula():
     solved = _local_solution("一个三角形底是8厘米，高是5厘米，求面积是多少？")
     assert solved.answer == "20平方单位"
