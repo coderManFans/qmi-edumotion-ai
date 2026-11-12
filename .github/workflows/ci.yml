@@ -37,8 +37,6 @@ jobs:
         run: npm run build
         working-directory: frontend
 
-  async-video-e2e:
-    runs-on: ubuntu-latest
   benchmark-video-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30
