@@ -596,6 +596,30 @@ def _local_solution(problem: str) -> SolvedProblem:
                 verification=f"按π≈3.14重新代入，结果为{_number_text(result)}",
             )
 
+    # Square perimeter from a known side length.
+    # Keep this direct relation ahead of inverse/fallback rules so the side
+    # length is never mistaken for an already-known perimeter.
+    if (
+        "正方形" in text
+        and "周长" in text
+        and labeled("边长") is not None
+        and re.search(r"(?:求|求出|计算).{0,5}周长|周长是多少|求周长", text)
+    ):
+        side = labeled("边长")
+        if side is not None and side > 0:
+            perimeter = side * 4
+            unit = "厘米" if "厘米" in text else "米" if "米" in text else "分米" if "分米" in text else "毫米" if "毫米" in text else "千米" if "千米" in text else ""
+            return _steps_for_formula(
+                known=f"正方形边长 = {_number_text(side)}{unit}",
+                formula="正方形周长 = 边长 × 4",
+                rearranged="周长 = 边长 × 4",
+                substitution=f"{_number_text(side)} × 4",
+                result=perimeter,
+                unit=unit,
+                conclusion="正方形的周长",
+                verification=f"{_number_text(side)} × 4 = {_number_text(perimeter)}{unit}，四条边长度相加一致",
+            )
+
     # Square: one side is unknown, perimeter is known.
     if "正方形" in text and ("周长" in text or "一周" in text) and len(values) == 1 and re.search(r"求.*边长|边长.*多少", text):
         perimeter = values[0]
