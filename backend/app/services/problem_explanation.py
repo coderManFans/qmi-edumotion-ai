@@ -6,7 +6,7 @@ from app.schemas.problem import ProblemExplanationResponse
 
 
 def build_explanation(problem_text: str, source_type: str) -> ProblemExplanationResponse:
-    cleaned = re.sub(r"\\s+", " ", problem_text).strip()
+    cleaned = re.sub(r"\s+", " ", problem_text).strip()
     solution = _local_solution(cleaned)
     return ProblemExplanationResponse(
         job_id=str(uuid.uuid4()), source_type=source_type, extracted_text=cleaned,

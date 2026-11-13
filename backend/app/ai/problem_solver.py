@@ -121,6 +121,285 @@ def _steps_for_formula(
     )
 
 
+def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
+    """Solve elementary square/rectangle relations from semantically labeled values.
+
+    Returning an unverified result for an identified geometry question is
+    intentional: geometry prompts must never fall through to positional
+    number guessing or an LLM-generated explanation.
+    """
+    text = re.sub(r"\s+", "", problem)
+    is_square = "正方形" in text
+    is_rectangle = "长方形" in text
+    if not (is_square or is_rectangle):
+        return None
+    # Rope-comparison questions have a dedicated multi-step solver below.
+    if is_square and re.search(r"绳子|绳长|绳索|绕.{0,3}一圈|围.{0,3}一圈", text):
+        return None
+    if not any(token in text for token in ("面积", "周长", "边长", "宽", "长")):
+        return None
+
+    def capture(label: str, *, negative_lookbehind: str = ""):
+        prefix_guard = rf"(?<!{negative_lookbehind})" if negative_lookbehind else ""
+        pattern = rf"{prefix_guard}{label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)(平方千米|平方公里|平方米|平方分米|平方厘米|平方毫米|千米|公里|米|分米|厘米|毫米)?"
+        match = re.search(pattern, text)
+        return (float(match.group(1)), match.group(2) or "") if match else (None, "")
+
+    side, side_unit = capture("边长")
+    length, length_unit = capture("长", negative_lookbehind="周")
+    width, width_unit = capture("宽")
+    area, area_unit = capture("面积")
+    perimeter, perimeter_unit = capture("周长")
+
+    asks_perimeter = "周长" in text and bool(re.search(r"求.{0,8}周长|周长(?:分别)?是多少|周长多长|计算.{0,8}周长", text))
+    asks_area = "面积" in text and bool(re.search(r"求.{0,8}面积|面积(?:分别)?是多少|面积多大|计算.{0,8}面积", text))
+    asks_side = bool(re.search(r"求.{0,8}(?:边长|宽|长)|(?:边长|宽|长)(?:和周长)?(?:分别)?是多少|求边长", text))
+    unit = side_unit or length_unit or width_unit or perimeter_unit
+    if asks_area and asks_perimeter:
+        return SolvedProblem(
+            answer=None, verification_status="unverified",
+            explanation="题目同时要求面积和周长，当前规则不将多个所求量合并成一个答案。",
+            steps=[
+                SolvedStep(title="识别所求量", explanation="题目同时提到了面积和周长。", narration="这道题有两个不同的所求量，需要分别列式。", visual_text="面积 + 周长"),
+                SolvedStep(title="暂不合并作答", explanation="为避免只回答其中一个问题，当前先不生成单一答案。", narration="请将面积和周长拆成两个问题，分别求解。", visual_text="需要拆分问题"),
+            ],
+        )
+    if unit.startswith("平方"):
+        unit = ""
+    area_result_unit = _area_unit(text)
+
+    def invalid(reason: str) -> SolvedProblem:
+        return SolvedProblem(
+            answer=None,
+            verification_status="unverified",
+            explanation=reason,
+            steps=[
+                SolvedStep(title="识别图形和条件", explanation=problem[:240], narration="先确认图形类型、已知数据和所求量。", visual_text="检查已知条件"),
+                SolvedStep(title="检查数据关系", explanation=reason, narration=reason, visual_text="条件不足或数据不一致"),
+                SolvedStep(title="暂不生成答案", explanation="为避免套错公式或猜测数字，当前不输出未经验证的结果。", narration="请核对题目条件后再计算。", visual_text="暂无法可靠求解"),
+            ],
+        )
+
+    if is_square:
+        side = side if side is not None else length
+        side_unit = side_unit or length_unit
+        if asks_perimeter:
+            if side is None or side <= 0:
+                return invalid("求正方形周长需要已知正数边长；当前题目没有提供可确认的边长。")
+            if side_unit and perimeter_unit and side_unit != perimeter_unit:
+                return invalid("正方形边长与周长的单位不一致，必须先换算成同一长度单位。")
+            if area is not None and not math.isclose(side * side, area, rel_tol=1e-9, abs_tol=1e-9):
+                return invalid("题目给出的边长与面积不符合正方形关系，不能同时成立。")
+            result = side * 4
+            return _steps_for_formula(
+                known=f"正方形边长 = {_number_text(side)}{side_unit}",
+                formula="正方形周长 = 边长 × 4",
+                rearranged="周长 = 边长 × 4",
+                substitution=f"{_number_text(side)} * 4",
+                result=result, unit=side_unit, conclusion="正方形的周长",
+                verification=f"{_number_text(side)} × 4 = {_number_text(result)}{side_unit}，四条边相加一致",
+            )
+        if asks_area:
+            if side is None or side <= 0:
+                return invalid("求正方形面积需要已知正数边长；当前题目没有提供可确认的边长。")
+            result = side * side
+            return _steps_for_formula(
+                known=f"正方形边长 = {_number_text(side)}{side_unit}",
+                formula="正方形面积 = 边长 × 边长",
+                rearranged="面积 = 边长 × 边长",
+                substitution=f"{_number_text(side)} * {_number_text(side)}",
+                result=result, unit=("平方" + side_unit if side_unit else "平方单位"),
+                conclusion="正方形的面积",
+                verification=f"{_number_text(side)} × {_number_text(side)} = {_number_text(result)}",
+            )
+        if asks_side:
+            known_perimeter = perimeter
+            known_area = area
+            if known_perimeter is not None and known_perimeter > 0:
+                result = known_perimeter / 4
+                if side is not None and not math.isclose(side, result, rel_tol=1e-9, abs_tol=1e-9):
+                    return invalid("题目给出的边长与周长不符合正方形关系，不能同时成立。")
+                return _steps_for_formula(
+                    known=f"正方形周长 = {_number_text(known_perimeter)}{perimeter_unit}",
+                    formula="周长 = 边长 × 4",
+                    rearranged="边长 = 周长 ÷ 4",
+                    substitution=f"{_number_text(known_perimeter)} / 4",
+                    result=result, unit=perimeter_unit, conclusion="正方形的边长",
+                    verification=f"{_number_text(result)} × 4 = {_number_text(known_perimeter)}，与已知周长一致",
+                )
+            if known_area is not None and known_area > 0:
+                if not area_unit.startswith("平方"):
+                    return invalid("已知正方形面积但没有面积单位，无法确定边长的长度单位。")
+                result = math.sqrt(known_area)
+                if not math.isclose(result, round(result), rel_tol=1e-9, abs_tol=1e-9):
+                    return invalid("正方形面积开平方后不是整数；当前规则不擅自近似边长。")
+                length_unit_from_area = area_unit.removeprefix("平方")
+                return _steps_for_formula(
+                    known=f"正方形面积 = {_number_text(known_area)}{area_unit}",
+                    formula="面积 = 边长 × 边长",
+                    rearranged="边长 = √面积",
+                    substitution=f"sqrt({_number_text(known_area)})",
+                    result=round(result), unit=length_unit_from_area, conclusion="正方形的边长",
+                    verification=f"{_number_text(result)} × {_number_text(result)} = {_number_text(known_area)}，与已知面积一致",
+                )
+            return invalid("求正方形边长需要已知周长或面积，当前缺少对应条件。")
+        return invalid("已识别为正方形题，但无法明确识别所求量或缺少必要条件；为避免误用公式，暂不作答。")
+
+    # Reject mixed measurement units rather than silently combining them.
+    if length_unit and width_unit and length_unit != width_unit:
+        return invalid("长和宽的单位不一致，必须先换算成同一长度单位。")
+    if area_unit and not area_unit.startswith("平方"):
+        return invalid("面积单位无法识别为平方长度单位，不能与长和宽直接计算。")
+    if perimeter_unit and length_unit and perimeter_unit != length_unit:
+        return invalid("周长单位与长的单位不一致，必须先换算成同一长度单位。")
+    if perimeter_unit and width_unit and perimeter_unit != width_unit:
+        return invalid("周长单位与宽的单位不一致，必须先换算成同一长度单位。")
+    expected_area_unit = ("平方" + (length_unit or width_unit)) if (length_unit or width_unit) else ""
+    if area_unit and expected_area_unit and area_unit != expected_area_unit:
+        return invalid("面积单位与长、宽的长度单位不匹配，必须先统一单位。")
+
+    # Rectangle relations: values are always taken from their labels, never
+    # from the order in which numbers happen to appear in the sentence.
+    if asks_area:
+        if perimeter is not None and length is not None and width is None:
+            width = perimeter / 2 - length
+            if width <= 0:
+                return invalid("由周长和长反推出的宽必须大于0；当前数据不构成长方形。")
+            area_value = length * width
+            return SolvedProblem(
+                answer=f"{_number_text(area_value)}{area_result_unit}",
+                verification_status="verified",
+                explanation="先根据长方形周长求出未知的宽，再用长乘宽求面积。",
+                steps=[
+                    SolvedStep(
+                        title="提取条件",
+                        explanation=f"周长={_number_text(perimeter)}{perimeter_unit}，长={_number_text(length)}{length_unit}",
+                        narration=f"题目已知长方形周长为{_number_text(perimeter)}，长为{_number_text(length)}。我们要求面积，需要先求出宽。",
+                        visual_text=f"周长={_number_text(perimeter)}；长={_number_text(length)}",
+                    ),
+                    SolvedStep(
+                        title="先求宽",
+                        explanation="周长 = (长 + 宽) × 2，所以宽 = 周长 ÷ 2 − 长。",
+                        narration=f"先用周长{_number_text(perimeter)}除以2，再减去长{_number_text(length)}，得到宽{_number_text(width)}。",
+                        visual_text=f"{_number_text(perimeter)} ÷ 2 − {_number_text(length)} = {_number_text(width)}",
+                        expression=f"{_number_text(perimeter)} / 2 - {_number_text(length)} = {_number_text(width)}",
+                    ),
+                    SolvedStep(
+                        title="再求面积",
+                        explanation="长方形面积=长×宽。",
+                        narration=f"现在长是{_number_text(length)}，宽是{_number_text(width)}，相乘得到面积{_number_text(area_value)}。",
+                        visual_text=f"{_number_text(length)} × {_number_text(width)} = {_number_text(area_value)}",
+                        expression=f"{_number_text(length)} * {_number_text(width)} = {_number_text(area_value)}",
+                    ),
+                    SolvedStep(
+                        title="验证",
+                        explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；{_number_text(length)}×{_number_text(width)}={_number_text(area_value)}。",
+                        narration="把长和宽代回周长公式，结果与已知周长一致；再用长乘宽复核面积。",
+                        visual_text=f"答案：{_number_text(area_value)}{area_result_unit}｜周长复核通过",
+                    ),
+                ],
+            )
+        if perimeter is not None and width is not None and length is None:
+            length = perimeter / 2 - width
+            if length <= 0:
+                return invalid("由周长和宽反推出的长必须大于0；当前数据不构成长方形。")
+            area_value = length * width
+            return SolvedProblem(
+                answer=f"{_number_text(area_value)}{area_result_unit}",
+                verification_status="verified",
+                explanation="先根据长方形周长求出未知的长，再用长乘宽求面积。",
+                steps=[
+                    SolvedStep(title="提取条件", explanation=f"周长={_number_text(perimeter)}{perimeter_unit}，宽={_number_text(width)}{width_unit}", narration="题目已知周长和宽，需要先求出长。", visual_text=f"周长={_number_text(perimeter)}；宽={_number_text(width)}"),
+                    SolvedStep(title="先求长", explanation="长=周长÷2−宽。", narration=f"用周长{_number_text(perimeter)}除以2，再减去宽{_number_text(width)}，得到长{_number_text(length)}。", visual_text=f"{_number_text(perimeter)} ÷ 2 − {_number_text(width)} = {_number_text(length)}"),
+                    SolvedStep(title="再求面积", explanation="面积=长×宽。", narration=f"长是{_number_text(length)}，宽是{_number_text(width)}，相乘得到面积{_number_text(area_value)}。", visual_text=f"{_number_text(length)} × {_number_text(width)} = {_number_text(area_value)}"),
+                    SolvedStep(title="验证", explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；长×宽={_number_text(area_value)}。", narration="将长和宽代回周长公式，确认数据一致，再复核面积。", visual_text=f"答案：{_number_text(area_value)}{area_result_unit}｜周长复核通过"),
+                ],
+            )
+        if length is None or width is None or length <= 0 or width <= 0:
+            return invalid("求长方形面积需要已知正数的长和宽；当前条件不足或尺寸无效。")
+        if area is not None and not math.isclose(length * width, area, rel_tol=1e-9, abs_tol=1e-9):
+            return invalid("题目给出的长、宽与面积不一致，不能按当前数据生成答案。")
+        result = length * width
+        return _steps_for_formula(
+            known=f"长 = {_number_text(length)}{length_unit}，宽 = {_number_text(width)}{width_unit}",
+            formula="长方形面积 = 长 × 宽",
+            rearranged="面积 = 长 × 宽",
+            substitution=f"{_number_text(length)} * {_number_text(width)}",
+            result=result, unit=area_result_unit, conclusion="长方形的面积",
+            verification=f"{_number_text(length)} × {_number_text(width)} = {_number_text(result)}",
+        )
+
+    if asks_perimeter:
+        if length is not None and width is not None:
+            if length <= 0 or width <= 0:
+                return invalid("长方形的长和宽都必须大于0。")
+            if area is not None and not math.isclose(length * width, area, rel_tol=1e-9, abs_tol=1e-9):
+                return invalid("题目给出的长、宽与面积不一致，不能按当前数据生成答案。")
+            result = 2 * (length + width)
+            return _steps_for_formula(
+                known=f"长 = {_number_text(length)}{length_unit}，宽 = {_number_text(width)}{width_unit}",
+                formula="长方形周长 = (长 + 宽) × 2",
+                rearranged="周长 = (长 + 宽) × 2",
+                substitution=f"({_number_text(length)} + {_number_text(width)}) * 2",
+                result=result, unit=length_unit or width_unit, conclusion="长方形的周长",
+                verification=f"({_number_text(length)} + {_number_text(width)}) × 2 = {_number_text(result)}",
+            )
+        return invalid("求长方形周长需要同时知道长和宽；当前题目缺少其中一个尺寸。")
+
+    if asks_side:
+        if perimeter is not None and length is not None and width is None:
+            result = perimeter / 2 - length
+            if result <= 0 or length <= 0:
+                return invalid("由周长和长反推出的宽必须大于0；当前数据不构成长方形。")
+            return _steps_for_formula(
+                known=f"周长 = {_number_text(perimeter)}{perimeter_unit}，长 = {_number_text(length)}{length_unit}",
+                formula="周长 = (长 + 宽) × 2",
+                rearranged="宽 = 周长 ÷ 2 − 长",
+                substitution=f"{_number_text(perimeter)} / 2 - {_number_text(length)}",
+                result=result, unit=perimeter_unit or length_unit, conclusion="长方形的宽",
+                verification=f"({_number_text(length)} + {_number_text(result)}) × 2 = {_number_text(perimeter)}",
+            )
+        if perimeter is not None and width is not None and length is None:
+            result = perimeter / 2 - width
+            if result <= 0 or width <= 0:
+                return invalid("由周长和宽反推出的长必须大于0；当前数据不构成长方形。")
+            return _steps_for_formula(
+                known=f"周长 = {_number_text(perimeter)}{perimeter_unit}，宽 = {_number_text(width)}{width_unit}",
+                formula="周长 = (长 + 宽) × 2",
+                rearranged="长 = 周长 ÷ 2 − 宽",
+                substitution=f"{_number_text(perimeter)} / 2 - {_number_text(width)}",
+                result=result, unit=perimeter_unit or width_unit, conclusion="长方形的长",
+                verification=f"({_number_text(result)} + {_number_text(width)}) × 2 = {_number_text(perimeter)}",
+            )
+        if area is not None and length is not None and width is None and length > 0:
+            result = area / length
+            if result <= 0:
+                return invalid("长方形的宽必须大于0。")
+            return _steps_for_formula(
+                known=f"面积 = {_number_text(area)}{area_unit}，长 = {_number_text(length)}{length_unit}",
+                formula="面积 = 长 × 宽",
+                rearranged="宽 = 面积 ÷ 长",
+                substitution=f"{_number_text(area)} / {_number_text(length)}",
+                result=result, unit=length_unit, conclusion="长方形的宽",
+                verification=f"{_number_text(length)} × {_number_text(result)} = {_number_text(area)}",
+            )
+        if area is not None and width is not None and length is None and width > 0:
+            result = area / width
+            if result <= 0:
+                return invalid("长方形的长必须大于0。")
+            return _steps_for_formula(
+                known=f"面积 = {_number_text(area)}{area_unit}，宽 = {_number_text(width)}{width_unit}",
+                formula="面积 = 长 × 宽",
+                rearranged="长 = 面积 ÷ 宽",
+                substitution=f"{_number_text(area)} / {_number_text(width)}",
+                result=result, unit=width_unit, conclusion="长方形的长",
+                verification=f"{_number_text(result)} × {_number_text(width)} = {_number_text(area)}",
+            )
+        return invalid("求长方形的未知边需要已知面积及另一条边，或周长及另一条边。")
+
+    return invalid("已识别为长方形题，但没有明确识别出所求量；为避免误用公式，暂不作答。")
+
+
 def _local_solution(problem: str) -> SolvedProblem:
     """Deterministic, deliberately narrow elementary-math solver.
 
@@ -136,6 +415,10 @@ def _local_solution(problem: str) -> SolvedProblem:
         match = re.search(rf"(?<!周){label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)", text)
         return float(match.group(1)) if match else None
 
+    geometry_solution = _solve_square_rectangle(problem)
+    if geometry_solution is not None:
+        return geometry_solution
+
     if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text) and not re.search(r"平方(?:厘米|米|分米|毫米)", text):
         return SolvedProblem(
             answer=None, verification_status="unverified",
@@ -146,6 +429,76 @@ def _local_solution(problem: str) -> SolvedProblem:
                 SolvedStep(title="暂不作答", explanation="需要补充面积单位。", narration="请补充面积单位后再计算。", visual_text="等待补充单位"),
             ],
         )
+
+    # Multi-step square-rope problem: area -> side -> perimeter -> length comparison.
+    # This is intentionally deterministic and does not depend on the LLM.
+    if "正方形" in text and "面积" in text and re.search(r"绳子|绳长|绳索|绕.{0,3}一圈|围.{0,3}一圈", text):
+        area = labeled("面积")
+        rope_match = re.search(
+            r"(?:绳子|绳长|绳索)(?:长|长度为|长度是)?(\d+(?:\.\d+)?)(千米|公里|米|分米|厘米|毫米)?"
+            r"|长(\d+(?:\.\d+)?)(千米|公里|米|分米|厘米|毫米)的绳子",
+            text,
+        )
+        if rope_match:
+            rope_value = float(rope_match.group(1) or rope_match.group(3))
+            rope_unit = rope_match.group(2) or rope_match.group(4) or ""
+        else:
+            fallback_rope = re.search(r"长(\d+(?:\.\d+)?)的绳子", text)
+            rope_value = float(fallback_rope.group(1)) if fallback_rope else None
+            rope_unit = ""
+        area_unit_match = re.search(r"平方(千米|公里|米|分米|厘米|毫米)", text)
+        area_unit = area_unit_match.group(1) if area_unit_match else ""
+        if area is not None and rope_value is None:
+            return SolvedProblem(
+                answer=None, verification_status="unverified",
+                explanation="题目只给出了正方形面积，没有提供绳长数值，无法判断是否足够。",
+                steps=[
+                    SolvedStep(title="提取已知条件", explanation=f"正方形面积为{_number_text(area)}，但未给出绳长。", narration="先确认正方形面积。", visual_text=f"面积：{_number_text(area)}"),
+                    SolvedStep(title="检查所需条件", explanation="判断能否绕一圈，需要先由面积求周长，再与绳长比较。", narration="目前缺少绳长数值，不能完成比较。", visual_text="缺少绳长"),
+                    SolvedStep(title="等待补充条件", explanation="请补充绳子的长度及单位。", narration="补充绳长后才能判断是否足够。", visual_text="需要绳长"),
+                ],
+            )
+        if area is not None and rope_value is not None and area >= 0 and rope_value >= 0:
+            if (area_unit and rope_unit and area_unit != rope_unit) or (area_unit and not rope_unit) or (rope_unit and not area_unit):
+                return SolvedProblem(
+                    answer=None, verification_status="unverified",
+                    explanation="面积单位与绳长单位必须对应一致；当前题目缺少单位或单位不一致，不能直接比较。",
+                    steps=[
+                        SolvedStep(title="识别面积", explanation=f"正方形面积为{_number_text(area)}，面积单位信息需要与绳长对应。", narration="先确认正方形的面积单位。", visual_text=f"面积：{_number_text(area)}"),
+                        SolvedStep(title="识别绳长", explanation=f"绳长为{_number_text(rope_value)}，需要确认它与面积单位对应的长度单位一致。", narration="再确认绳子的长度单位。", visual_text=f"绳长：{_number_text(rope_value)}"),
+                        SolvedStep(title="暂不比较", explanation="单位信息不完整或不一致，请补充统一单位。", narration="单位没有统一前，不能判断绳子是否足够长。", visual_text="需要统一单位"),
+                    ],
+                )
+            side = math.sqrt(area)
+            if not math.isclose(side, round(side), abs_tol=1e-9):
+                return SolvedProblem(
+                    answer=None, verification_status="unverified",
+                    explanation="正方形面积不是完全平方数，当前小学整数长度规则无法给出精确边长，暂不作近似判断。",
+                    steps=[
+                        SolvedStep(title="提取条件", explanation=f"正方形面积为{_number_text(area)}。", narration="先读取正方形面积。", visual_text=f"面积 = {_number_text(area)}"),
+                        SolvedStep(title="反求边长", explanation="边长需要等于面积的平方根，但结果不是整数。", narration="需要先求面积的平方根；当前规则不擅自把它近似成整数。", visual_text=f"边长 = √{_number_text(area)}"),
+                        SolvedStep(title="等待精确条件", explanation="请确认是否接受小数近似，或补充可得到精确边长的条件。", narration="为了保证判断可靠，暂不猜测最终结果。", visual_text="边长暂无法精确确定"),
+                    ],
+                )
+            side = float(round(side))
+            perimeter = side * 4
+            difference = abs(perimeter - rope_value)
+            enough = rope_value >= perimeter
+            length_unit = rope_unit or area_unit or ""
+            unit_suffix = length_unit if length_unit else "（同一长度单位）"
+            answer = ("能" if enough else "不能") + (f"，" + ("多" if enough else "还差") + _number_text(difference) + unit_suffix if difference else "，刚好够")
+            return SolvedProblem(
+                answer=answer,
+                verification_status="verified",
+                explanation="先由正方形面积反求边长，再求周长，最后将绳长与周长比较。",
+                steps=[
+                    SolvedStep(title="提取已知条件", explanation=f"正方形面积={_number_text(area)}；绳长={_number_text(rope_value)}。", narration=f"题目告诉我们正方形面积是{_number_text(area)}，绳子长{_number_text(rope_value)}。", visual_text=f"面积 {_number_text(area)}；绳长 {_number_text(rope_value)}"),
+                    SolvedStep(title="先求正方形边长", explanation="正方形面积=边长×边长，所以边长=√面积。", narration="正方形四条边一样长。面积等于边长乘边长，所以用面积开平方，求出边长。", visual_text=f"√{_number_text(area)} = {_number_text(side)}"),
+                    SolvedStep(title="再求正方形周长", explanation="正方形周长=边长×4。", narration=f"知道一条边长是{_number_text(side)}后，乘以4，得到绕正方形一圈需要的长度。", visual_text=f"{_number_text(side)} × 4 = {_number_text(perimeter)}"),
+                    SolvedStep(title="比较绳长与周长", explanation=f"绳长{_number_text(rope_value)} {'≥' if enough else '<'} 周长{_number_text(perimeter)}，因此{answer}。", narration=f"绕一圈需要{_number_text(perimeter)}，绳子只有{_number_text(rope_value)}，所以{answer}。", visual_text=f"{_number_text(rope_value)} {'≥' if enough else '<'} {_number_text(perimeter)}"),
+                    SolvedStep(title="回答并验证", explanation=f"把边长代回面积：{_number_text(side)}×{_number_text(side)}={_number_text(area)}；周长为{_number_text(perimeter)}。", narration=f"再检查面积和周长计算都正确，最终答案：{answer}。", visual_text=f"答案：{answer}", expression=f"{_number_text(side)} * 4 = {_number_text(perimeter)}"),
+                ],
+            )
 
     # Reverse geometry: known area and one dimension.
     if "正方形" in text and "面积" in text and re.search(r"(?:求|求出|计算).{0,5}边长|边长(?:和周长)?分别是多少|边长是多少", text):
@@ -210,10 +563,35 @@ def _local_solution(problem: str) -> SolvedProblem:
                         SolvedStep(title="验证", explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；长×宽={_number_text(area)}", narration="把长和宽代回周长公式，周长正确；再计算面积，得到最终答案。", visual_text=f"答案：{_number_text(area)}平方{unit or '单位'}"),
                     ],
                 )
+            # An impossible or degenerate side must stop here. Otherwise a later
+            # generic area fallback can incorrectly multiply perimeter by length.
+            return SolvedProblem(
+                answer=None, verification_status="unverified",
+                explanation="由周长反推出的宽必须大于0；当前数据会得到非正宽度，长方形条件不成立。",
+                steps=[
+                    SolvedStep(title="提取条件", explanation=f"周长={_number_text(perimeter)}，长={_number_text(length)}。", narration="先读取长方形的周长和已知的长。", visual_text=f"周长 {_number_text(perimeter)}；长 {_number_text(length)}"),
+                    SolvedStep(title="检查宽度", explanation=f"宽=周长÷2−长={_number_text(perimeter)}÷2−{_number_text(length)}={_number_text(width)}，宽必须大于0。", narration="根据周长公式反推出宽度，结果不是正数，因此这些条件互相矛盾。", visual_text=f"宽 = {_number_text(perimeter)} ÷ 2 − {_number_text(length)} = {_number_text(width)}"),
+                    SolvedStep(title="拒绝不合理结果", explanation="长方形的长和宽都必须为正数，不能继续计算面积。", narration="题目数据不成立，请检查周长或长的数据。", visual_text="数据矛盾，暂不作答"),
+                ],
+            )
 
     # Inverse unit-price relation: total price / unit price = quantity.
-    if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计", text):
-        total, price = labeled("总价"), labeled("单价")
+    if re.search(r"数量|几支|几个|几本|多少支|多少个|多少本", text) and re.search(r"总价|一共|共计|花了", text):
+        total_match = re.search(r"(?:总价(?:是|为)?|一共(?:花了|是|为)?|共计(?:是|为)?|花了)(\d+(?:\.\d+)?)元?", text)
+        total = float(total_match.group(1)) if total_match else labeled("总价")
+        price = labeled("单价")
+        if total is not None and price is not None and price > 0 and total >= 0:
+            quantity = total / price
+            if not math.isclose(quantity, round(quantity), abs_tol=1e-9):
+                return SolvedProblem(
+                    answer=None, verification_status="unverified",
+                    explanation="总价不能被单价整除，得到的数量不是整数，不能推断购买了部分物品。",
+                    steps=[
+                        SolvedStep(title="提取条件", explanation=f"总价={_number_text(total)}元，单价={_number_text(price)}元。", narration="先读取总价和每件物品的单价。", visual_text=f"总价 {_number_text(total)}元；单价 {_number_text(price)}元"),
+                        SolvedStep(title="计算数量", explanation="数量=总价÷单价。", narration="用总价除以单价，检查结果是否为整数。", visual_text=f"{_number_text(total)} ÷ {_number_text(price)} = {_number_text(quantity)}"),
+                        SolvedStep(title="暂不作答", explanation="购买件数应为整数，当前数据不满足条件。", narration="请核对总价或单价，系统不会四舍五入。", visual_text="数量不是整数"),
+                    ],
+                )
         if total is not None and price is not None and price > 0 and total >= 0:
             quantity = total / price
             if math.isclose(quantity, round(quantity), abs_tol=1e-9):
@@ -228,8 +606,15 @@ def _local_solution(problem: str) -> SolvedProblem:
                 )
 
     # Inverse travel relation: time = distance / speed.
-    if re.search(r"时间|几小时|多少小时|需要多久", text) and re.search(r"路程|距离", text) and re.search(r"速度|每小时|千米/小时|公里/小时", text):
-        distance, speed = labeled("路程"), labeled("速度")
+    if re.search(r"时间|几小时|多少小时|需要多久", text) and re.search(r"路程|距离|行驶", text) and re.search(r"速度|每小时|千米/小时|公里/小时", text):
+        distance = labeled("路程") or labeled("距离")
+        if distance is None:
+            travel_match = re.search(r"(?:行驶了|行驶)(\d+(?:\.\d+)?)(?:千米|公里|米)?", text)
+            distance = float(travel_match.group(1)) if travel_match else None
+        speed = labeled("速度")
+        if speed is None:
+            speed_match = re.search(r"速度(?:是|为)?(\d+(?:\.\d+)?)", text)
+            speed = float(speed_match.group(1)) if speed_match else None
         if distance is not None and speed is not None and speed > 0 and distance >= 0:
             time_value = distance / speed
             return _steps_for_formula(
@@ -254,6 +639,23 @@ def _local_solution(problem: str) -> SolvedProblem:
                 substitution=f"{_number_text(part)} ÷ ({_number_text(numerator)}/{_number_text(denominator)})",
                 result=whole, unit="", conclusion="单位“1”所表示的整体量",
                 verification=f"{_number_text(whole)} × {_number_text(numerator)}/{_number_text(denominator)} = {_number_text(part)}",
+            )
+
+    # Normalize Chinese "百分之N" phrasing to the same semantic percentage relation.
+    chinese_percent_whole = re.search(
+        r"(?:一个数|原价|原来|原有量)?的?百分之(\d+(?:\.\d+)?)是(\d+(?:\.\d+)?)", text
+    )
+    if chinese_percent_whole and re.search(r"这个数|原来|原价|原有量|单位1|整体", text):
+        rate, part = map(float, chinese_percent_whole.groups())
+        if 0 < rate <= 100:
+            whole = part / (rate / 100)
+            return _steps_for_formula(
+                known=f"对应百分率 = {_number_text(rate)}%，对应部分量 = {_number_text(part)}",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="整体量 = 部分量 ÷ 百分率",
+                substitution=f"{_number_text(part)} ÷ {_number_text(rate / 100)}",
+                result=whole, unit="", conclusion="原来的整体量（单位“1”）",
+                verification=f"{_number_text(whole)} × {_number_text(rate)}% = {_number_text(part)}",
             )
 
     # Percentage: find the whole when a known percentage of it is given.
@@ -438,6 +840,37 @@ def _local_solution(problem: str) -> SolvedProblem:
                 verification=f"{_number_text(average)} × {_number_text(count)} = {_number_text(total)}",
             )
 
+    # Chinese percentage phrasing and part/whole percentage comparison.
+    chinese_direct_percent = re.search(r"(\d+(?:\.\d+)?)的百分之(\d+(?:\.\d+)?)", text)
+    if chinese_direct_percent and re.search(r"是多少|求.*多少", text):
+        whole, rate = map(float, chinese_direct_percent.groups())
+        if whole >= 0 and 0 <= rate <= 100:
+            part = whole * rate / 100
+            return _steps_for_formula(
+                known=f"整体量 = {_number_text(whole)}，百分率 = {_number_text(rate)}%",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="部分量 = 整体量 × 百分率",
+                substitution=f"{_number_text(whole)} × {_number_text(rate / 100)}",
+                result=part, unit="", conclusion="对应的部分量",
+                verification=f"{_number_text(part)} ÷ {_number_text(whole) if whole else '整体量'} = {_number_text(rate)}%" if whole else "整体量为0，部分量也为0",
+            )
+
+    part_of_whole_percent = re.search(
+        r"(\d+(?:\.\d+)?)是(\d+(?:\.\d+)?)的(?:百分之几|百分比是多少|百分率是多少)", text
+    )
+    if part_of_whole_percent:
+        part, whole = map(float, part_of_whole_percent.groups())
+        if whole > 0 and 0 <= part <= whole:
+            rate = part / whole * 100
+            return _steps_for_formula(
+                known=f"部分量 = {_number_text(part)}，整体量 = {_number_text(whole)}",
+                formula="百分率 = 部分量 ÷ 整体量 × 100%",
+                rearranged="百分率 = 部分量 ÷ 整体量 × 100%",
+                substitution=f"{_number_text(part)} ÷ {_number_text(whole)} × 100%",
+                result=rate, unit="%", conclusion="所占百分率",
+                verification=f"{_number_text(whole)} × {_number_text(rate / 100)} = {_number_text(part)}",
+            )
+
     # Percentage of a known whole: e.g. 200的20%是多少.
     direct_percent = re.search(r"(\d+(?:\.\d+)?)的(\d+(?:\.\d+)?)%", text)
     if direct_percent and re.search(r"是多少|求.*多少", text) and not ("涨价" in text and "降价" in text):
@@ -492,6 +925,30 @@ def _local_solution(problem: str) -> SolvedProblem:
                 unit=unit,
                 conclusion=conclusion,
                 verification=f"按π≈3.14重新代入，结果为{_number_text(result)}",
+            )
+
+    # Square perimeter from a known side length.
+    # Keep this direct relation ahead of inverse/fallback rules so the side
+    # length is never mistaken for an already-known perimeter.
+    if (
+        "正方形" in text
+        and "周长" in text
+        and labeled("边长") is not None
+        and re.search(r"(?:求|求出|计算).{0,5}周长|周长是多少|求周长", text)
+    ):
+        side = labeled("边长")
+        if side is not None and side > 0:
+            perimeter = side * 4
+            unit = "厘米" if "厘米" in text else "米" if "米" in text else "分米" if "分米" in text else "毫米" if "毫米" in text else "千米" if "千米" in text else ""
+            return _steps_for_formula(
+                known=f"正方形边长 = {_number_text(side)}{unit}",
+                formula="正方形周长 = 边长 × 4",
+                rearranged="周长 = 边长 × 4",
+                substitution=f"{_number_text(side)} × 4",
+                result=perimeter,
+                unit=unit,
+                conclusion="正方形的周长",
+                verification=f"{_number_text(side)} × 4 = {_number_text(perimeter)}{unit}，四条边长度相加一致",
             )
 
     # Square: one side is unknown, perimeter is known.
@@ -631,24 +1088,29 @@ def _local_solution(problem: str) -> SolvedProblem:
 
 
 def _verify_model_answer(solved: SolvedProblem) -> SolvedProblem:
-    """Only mark an LLM answer verified when its final arithmetic is independently reproducible."""
+    """Check arithmetic consistency, but never certify model reasoning semantically.
+
+    A valid equation alone does not prove that the equation represents the
+    quantities asked for in the word problem. Only deterministic, typed local
+    rules may currently produce a verified result.
+    """
+    solved.verification_status = "unverified"
     if solved.answer is None or not solved.steps:
-        solved.verification_status = "unverified"
         return solved
     expression = solved.steps[-1].expression
     if not expression or "=" not in expression:
-        solved.verification_status = "unverified"
         return solved
     left_side, right_side = expression.split("=", 1)
     normalized = left_side.replace("×", "*").replace("÷", "/").replace("−", "-").replace("^", "**")
     try:
         computed = _safe_arithmetic(normalized.strip())
-        expected = float(re.sub(r"[^0-9.\-]", "", right_side.strip()))
-        answer_value = float(re.sub(r"[^0-9.\-]", "", solved.answer))
-        valid = abs(computed - expected) < 1e-8 and abs(computed - answer_value) < 1e-8
-        solved.verification_status = "verified" if valid else "unverified"
+        expected = float(re.sub(r"[^0-9.\\-]", "", right_side.strip()))
+        answer_value = float(re.sub(r"[^0-9.\\-]", "", solved.answer))
+        # Arithmetic is only a necessary condition, not a semantic proof.
+        if abs(computed - expected) >= 1e-8 or abs(computed - answer_value) >= 1e-8:
+            solved.explanation += " 最后算式与答案不一致，结果未通过验证。"
     except (ValueError, SyntaxError, ZeroDivisionError):
-        solved.verification_status = "unverified"
+        solved.explanation += " 最后算式无法独立计算，结果未通过验证。"
     return solved
 
 
@@ -657,6 +1119,10 @@ async def solve_problem(problem: str) -> SolvedProblem:
     # Prefer deterministic local results for supported question types. The LLM
     # is an extension for unsupported questions, not a replacement for known rules.
     if local.verification_status == "verified":
+        return local
+    # Geometry is intentionally fail-closed: do not let an LLM replace a
+    # rejected/ambiguous square or rectangle derivation with a plausible guess.
+    if re.search(r"正方形|长方形", problem):
         return local
     if not (settings.llm_base_url and settings.llm_model and settings.llm_api_key):
         return local

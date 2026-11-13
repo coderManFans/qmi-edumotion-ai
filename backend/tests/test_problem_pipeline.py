@@ -61,8 +61,21 @@ def test_llm_answer_is_verified_only_when_final_arithmetic_matches():
     )
     mismatching = matching.model_copy(deep=True)
     mismatching.answer = "5"
-    assert _verify_model_answer(matching).verification_status == "verified"
+    assert _verify_model_answer(matching).verification_status == "unverified"
     assert _verify_model_answer(mismatching).verification_status == "unverified"
+
+
+def test_arithmetic_only_does_not_semantically_verify_a_model_solution():
+    plausible_but_wrong = SolvedProblem(
+        answer="1",
+        verification_status="verified",
+        explanation="把边长当成周长后再除以4。",
+        steps=[
+            SolvedStep(title="条件", explanation="边长是4", narration="边长是4", visual_text="边长=4"),
+            SolvedStep(title="计算", explanation="4÷4=1", narration="计算得到1", visual_text="4÷4=1", expression="4 / 4 = 1"),
+        ],
+    )
+    assert _verify_model_answer(plausible_but_wrong).verification_status == "unverified"
 
 
 def test_scene_script_contains_real_steps_and_verification():
@@ -321,3 +334,18 @@ def test_benchmark_cases_have_complete_teaching_and_source_metadata():
             assert case["calculation_steps"]
 
 
+
+
+def test_square_perimeter_storyboard_uses_correct_answer_and_formula():
+    result = build_explanation("一个正方形的边长是4，求周长是多少", "text")
+    assert result.answer == "16"
+    assert result.verification_status == "verified"
+    assert any("边长 × 4" in scene.visual_text for scene in result.scenes)
+    assert result.scenes[-1].visual_text == "答案：16｜验证通过"
+
+
+def test_rectangle_perimeter_storyboard_uses_correct_answer_and_formula():
+    result = build_explanation("一个长方形长8厘米、宽5厘米，求周长是多少？", "text")
+    assert result.answer == "26厘米"
+    assert result.verification_status == "verified"
+    assert any("(8 + 5) * 2 = 26" in scene.visual_text for scene in result.scenes)
