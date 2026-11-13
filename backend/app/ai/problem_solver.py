@@ -151,9 +151,9 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
     area, area_unit = capture("面积")
     perimeter, perimeter_unit = capture("周长")
 
-    asks_perimeter = "周长" in text and bool(re.search(r"求.{0,8}周长|周长是多少|周长多长|计算.{0,8}周长", text))
-    asks_area = "面积" in text and bool(re.search(r"求.{0,8}面积|面积是多少|面积多大|计算.{0,8}面积", text))
-    asks_side = bool(re.search(r"求.{0,8}(?:边长|宽|长)|(?:边长|宽|长)是多少|求边长", text))
+    asks_perimeter = "周长" in text and bool(re.search(r"求.{0,8}周长|周长(?:分别)?是多少|周长多长|计算.{0,8}周长", text))
+    asks_area = "面积" in text and bool(re.search(r"求.{0,8}面积|面积(?:分别)?是多少|面积多大|计算.{0,8}面积", text))
+    asks_side = bool(re.search(r"求.{0,8}(?:边长|宽|长)|(?:边长|宽|长)(?:和周长)?(?:分别)?是多少|求边长", text))
     unit = side_unit or length_unit or width_unit or perimeter_unit
     if asks_area and asks_perimeter:
         return SolvedProblem(
@@ -243,7 +243,7 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
                     verification=f"{_number_text(result)} × {_number_text(result)} = {_number_text(known_area)}，与已知面积一致",
                 )
             return invalid("求正方形边长需要已知周长或面积，当前缺少对应条件。")
-        return invalid("已识别为正方形题，但没有明确识别出所求量；为避免误用公式，暂不作答。")
+        return invalid("已识别为正方形题，但无法明确识别所求量或缺少必要条件；为避免误用公式，暂不作答。")
 
     # Reject mixed measurement units rather than silently combining them.
     if length_unit and width_unit and length_unit != width_unit:
@@ -639,6 +639,23 @@ def _local_solution(problem: str) -> SolvedProblem:
                 substitution=f"{_number_text(part)} ÷ ({_number_text(numerator)}/{_number_text(denominator)})",
                 result=whole, unit="", conclusion="单位“1”所表示的整体量",
                 verification=f"{_number_text(whole)} × {_number_text(numerator)}/{_number_text(denominator)} = {_number_text(part)}",
+            )
+
+    # Normalize Chinese "百分之N" phrasing to the same semantic percentage relation.
+    chinese_percent_whole = re.search(
+        r"(?:一个数|原价|原来|原有量)?的?百分之(\d+(?:\.\d+)?)是(\d+(?:\.\d+)?)", text
+    )
+    if chinese_percent_whole and re.search(r"这个数|原来|原价|原有量|单位1|整体", text):
+        rate, part = map(float, chinese_percent_whole.groups())
+        if 0 < rate <= 100:
+            whole = part / (rate / 100)
+            return _steps_for_formula(
+                known=f"对应百分率 = {_number_text(rate)}%，对应部分量 = {_number_text(part)}",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="整体量 = 部分量 ÷ 百分率",
+                substitution=f"{_number_text(part)} ÷ {_number_text(rate / 100)}",
+                result=whole, unit="", conclusion="原来的整体量（单位“1”）",
+                verification=f"{_number_text(whole)} × {_number_text(rate)}% = {_number_text(part)}",
             )
 
     # Percentage: find the whole when a known percentage of it is given.
