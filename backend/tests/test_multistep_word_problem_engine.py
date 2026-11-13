@@ -179,3 +179,31 @@ def test_rectangle_area_can_be_derived_from_perimeter_and_known_width():
     assert solved.verification_status == "verified"
     assert any(step.title == "先求长" for step in solved.steps)
     assert any(step.title == "再求面积" for step in solved.steps)
+
+
+
+@pytest.mark.parametrize(
+    ("problem", "expected"),
+    [
+        ("一个数的20%是30，这个数是多少？", "150"),
+        ("一个数的百分之20是30，求这个数。", "150"),
+        ("200的20%是多少？", "40"),
+        ("200的百分之20是多少？", "40"),
+        ("40是200的百分之几？", "20%"),
+    ],
+)
+def test_percentage_relations_support_common_chinese_wordings(problem, expected):
+    solved = _local_solution(problem)
+    assert solved.answer == expected
+    assert solved.verification_status == "verified"
+    assert any("百分" in step.explanation or "百分" in step.narration for step in solved.steps)
+
+
+def test_square_area_missing_unit_with_two_requested_outputs_is_explicitly_unverified():
+    solved = _local_solution("一个正方形面积是64，边长和周长分别是多少？")
+    assert solved.answer is None
+    assert solved.verification_status == "unverified"
+    assert any(
+        token in step.narration for step in solved.steps
+        for token in ("缺少", "不足", "无法", "不能", "需要")
+    )
