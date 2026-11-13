@@ -61,8 +61,21 @@ def test_llm_answer_is_verified_only_when_final_arithmetic_matches():
     )
     mismatching = matching.model_copy(deep=True)
     mismatching.answer = "5"
-    assert _verify_model_answer(matching).verification_status == "verified"
+    assert _verify_model_answer(matching).verification_status == "unverified"
     assert _verify_model_answer(mismatching).verification_status == "unverified"
+
+
+def test_arithmetic_only_does_not_semantically_verify_a_model_solution():
+    plausible_but_wrong = SolvedProblem(
+        answer="1",
+        verification_status="verified",
+        explanation="把边长当成周长后再除以4。",
+        steps=[
+            SolvedStep(title="条件", explanation="边长是4", narration="边长是4", visual_text="边长=4"),
+            SolvedStep(title="计算", explanation="4÷4=1", narration="计算得到1", visual_text="4÷4=1", expression="4 / 4 = 1"),
+        ],
+    )
+    assert _verify_model_answer(plausible_but_wrong).verification_status == "unverified"
 
 
 def test_scene_script_contains_real_steps_and_verification():
