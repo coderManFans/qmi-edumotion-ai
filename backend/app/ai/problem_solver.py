@@ -137,7 +137,8 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
         return None
 
     def capture(label: str, *, negative_lookbehind: str = ""):
-        pattern = rf"(?<!{negative_lookbehind}){label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)(平方千米|平方公里|平方米|平方分米|平方厘米|平方毫米|千米|公里|米|分米|厘米|毫米)?"
+        prefix_guard = rf"(?<!{negative_lookbehind})" if negative_lookbehind else ""
+        pattern = rf"{prefix_guard}{label}(?:是|为|有|等于|：|:)?(\d+(?:\.\d+)?)(平方千米|平方公里|平方米|平方分米|平方厘米|平方毫米|千米|公里|米|分米|厘米|毫米)?"
         match = re.search(pattern, text)
         return (float(match.group(1)), match.group(2) or "") if match else (None, "")
 
