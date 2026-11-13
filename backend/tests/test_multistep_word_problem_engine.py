@@ -117,3 +117,39 @@ def test_non_integral_item_quantity_is_not_rounded_or_guessed():
 
     assert solved.answer is None
     assert solved.verification_status == "unverified"
+
+
+@pytest.mark.parametrize(
+    ("problem", "expected", "formula_fragment"),
+    [
+        ("一个正方形的边长是4，求周长是多少", "16", "边长 × 4"),
+        ("正方形边长为5厘米，周长是多少？", "20厘米", "边长 × 4"),
+        ("一个正方形边长是4，求面积是多少？", "16平方单位", "边长 × 边长"),
+        ("一个长方形长8厘米、宽5厘米，求周长是多少？", "26厘米", "长 + 宽"),
+        ("一个长方形长8厘米、宽5厘米，求面积是多少？", "40平方厘米", "长 × 宽"),
+        ("一个长方形周长是26厘米，长是8厘米，宽是多少？", "5厘米", "周长 ÷ 2"),
+        ("一个长方形面积是48平方厘米，长是8厘米，宽是多少？", "6厘米", "面积 ÷ 长"),
+        ("一个长方形周长是30厘米，长是9厘米，面积是多少？", "54平方厘米", "周长 ÷ 2"),
+    ],
+)
+def test_square_rectangle_solver_uses_semantic_roles(problem, expected, formula_fragment):
+    solved = _local_solution(problem)
+    assert solved.answer == expected
+    assert solved.verification_status == "verified"
+    assert any(formula_fragment in step.explanation or formula_fragment in step.visual_text for step in solved.steps)
+
+
+@pytest.mark.parametrize(
+    "problem",
+    [
+        "一个长方形周长是10厘米，长是8厘米，面积是多少？",
+        "一个长方形长8厘米，面积是多少？",
+        "一个正方形面积是16平方厘米，周长是多少？",
+        "一个长方形面积是48平方厘米，长是0厘米，宽是多少？",
+        "一个长方形长8厘米，宽5厘米，面积是100平方厘米，求周长。",
+    ],
+)
+def test_square_rectangle_solver_rejects_incomplete_or_contradictory_data(problem):
+    solved = _local_solution(problem)
+    assert solved.answer is None
+    assert solved.verification_status == "unverified"
