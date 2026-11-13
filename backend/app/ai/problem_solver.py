@@ -279,7 +279,7 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
                     ),
                     SolvedStep(
                         title="先求宽",
-                        explanation="周长=(长+宽)×2，所以宽=周长÷2−长。",
+                        explanation="周长 = (长 + 宽) × 2，所以宽 = 周长 ÷ 2 − 长。",
                         narration=f"先用周长{_number_text(perimeter)}除以2，再减去长{_number_text(length)}，得到宽{_number_text(width)}。",
                         visual_text=f"{_number_text(perimeter)} ÷ 2 − {_number_text(length)} = {_number_text(width)}",
                         expression=f"{_number_text(perimeter)} / 2 - {_number_text(length)} = {_number_text(width)}",
