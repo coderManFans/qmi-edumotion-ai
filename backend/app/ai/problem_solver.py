@@ -840,6 +840,37 @@ def _local_solution(problem: str) -> SolvedProblem:
                 verification=f"{_number_text(average)} × {_number_text(count)} = {_number_text(total)}",
             )
 
+    # Chinese percentage phrasing and part/whole percentage comparison.
+    chinese_direct_percent = re.search(r"(\d+(?:\.\d+)?)的百分之(\d+(?:\.\d+)?)", text)
+    if chinese_direct_percent and re.search(r"是多少|求.*多少", text):
+        whole, rate = map(float, chinese_direct_percent.groups())
+        if whole >= 0 and 0 <= rate <= 100:
+            part = whole * rate / 100
+            return _steps_for_formula(
+                known=f"整体量 = {_number_text(whole)}，百分率 = {_number_text(rate)}%",
+                formula="部分量 = 整体量 × 百分率",
+                rearranged="部分量 = 整体量 × 百分率",
+                substitution=f"{_number_text(whole)} × {_number_text(rate / 100)}",
+                result=part, unit="", conclusion="对应的部分量",
+                verification=f"{_number_text(part)} ÷ {_number_text(whole) if whole else '整体量'} = {_number_text(rate)}%" if whole else "整体量为0，部分量也为0",
+            )
+
+    part_of_whole_percent = re.search(
+        r"(\d+(?:\.\d+)?)是(\d+(?:\.\d+)?)的(\d+(?:\.\d+)?)%", text
+    )
+    if part_of_whole_percent and re.search(r"百分之几|百分率|百分比|占.*百分", text):
+        part, whole, _stated_rate = map(float, part_of_whole_percent.groups())
+        if whole > 0 and 0 <= part <= whole:
+            rate = part / whole * 100
+            return _steps_for_formula(
+                known=f"部分量 = {_number_text(part)}，整体量 = {_number_text(whole)}",
+                formula="百分率 = 部分量 ÷ 整体量 × 100%",
+                rearranged="百分率 = 部分量 ÷ 整体量 × 100%",
+                substitution=f"{_number_text(part)} ÷ {_number_text(whole)} × 100%",
+                result=rate, unit="%", conclusion="所占百分率",
+                verification=f"{_number_text(whole)} × {_number_text(rate / 100)} = {_number_text(part)}",
+            )
+
     # Percentage of a known whole: e.g. 200的20%是多少.
     direct_percent = re.search(r"(\d+(?:\.\d+)?)的(\d+(?:\.\d+)?)%", text)
     if direct_percent and re.search(r"是多少|求.*多少", text) and not ("涨价" in text and "降价" in text):
