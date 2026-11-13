@@ -266,13 +266,39 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
             if width <= 0:
                 return invalid("由周长和长反推出的宽必须大于0；当前数据不构成长方形。")
             area_value = length * width
-            return _steps_for_formula(
-                known=f"周长 = {_number_text(perimeter)}{perimeter_unit}，长 = {_number_text(length)}{length_unit}",
-                formula="周长 = (长 + 宽) × 2；面积 = 长 × 宽",
-                rearranged="宽 = 周长 ÷ 2 − 长；面积 = 长 × 宽",
-                substitution=f"{_number_text(length)} * ({_number_text(perimeter)} / 2 - {_number_text(length)})",
-                result=area_value, unit=area_result_unit, conclusion="长方形的面积",
-                verification=f"宽={_number_text(width)}；({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；面积={_number_text(area_value)}",
+            length_unit_out = length_unit or perimeter_unit
+            return SolvedProblem(
+                answer=f"{_number_text(area_value)}{area_result_unit}",
+                verification_status="verified",
+                explanation="先根据长方形周长求出未知的宽，再用长乘宽求面积。",
+                steps=[
+                    SolvedStep(
+                        title="提取条件",
+                        explanation=f"周长={_number_text(perimeter)}{perimeter_unit}，长={_number_text(length)}{length_unit}",
+                        narration=f"题目已知长方形周长为{_number_text(perimeter)}，长为{_number_text(length)}。我们要求面积，需要先求出宽。",
+                        visual_text=f"周长={_number_text(perimeter)}；长={_number_text(length)}",
+                    ),
+                    SolvedStep(
+                        title="先求宽",
+                        explanation="周长=(长+宽)×2，所以宽=周长÷2−长。",
+                        narration=f"先用周长{_number_text(perimeter)}除以2，再减去长{_number_text(length)}，得到宽{_number_text(width)}。",
+                        visual_text=f"{_number_text(perimeter)} ÷ 2 − {_number_text(length)} = {_number_text(width)}",
+                        expression=f"{_number_text(perimeter)} / 2 - {_number_text(length)} = {_number_text(width)}",
+                    ),
+                    SolvedStep(
+                        title="再求面积",
+                        explanation="长方形面积=长×宽。",
+                        narration=f"现在长是{_number_text(length)}，宽是{_number_text(width)}，相乘得到面积{_number_text(area_value)}。",
+                        visual_text=f"{_number_text(length)} × {_number_text(width)} = {_number_text(area_value)}",
+                        expression=f"{_number_text(length)} * {_number_text(width)} = {_number_text(area_value)}",
+                    ),
+                    SolvedStep(
+                        title="验证",
+                        explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；{_number_text(length)}×{_number_text(width)}={_number_text(area_value)}。",
+                        narration="把长和宽代回周长公式，结果与已知周长一致；再用长乘宽复核面积。",
+                        visual_text=f"答案：{_number_text(area_value)}{area_result_unit}｜周长复核通过",
+                    ),
+                ],
             )
         if length is None or width is None or length <= 0 or width <= 0:
             return invalid("求长方形面积需要已知正数的长和宽；当前条件不足或尺寸无效。")
