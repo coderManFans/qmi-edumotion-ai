@@ -856,10 +856,10 @@ def _local_solution(problem: str) -> SolvedProblem:
             )
 
     part_of_whole_percent = re.search(
-        r"(\d+(?:\.\d+)?)是(\d+(?:\.\d+)?)的(\d+(?:\.\d+)?)%", text
+        r"(\d+(?:\.\d+)?)是(\d+(?:\.\d+)?)的(?:百分之几|百分比是多少|百分率是多少)", text
     )
-    if part_of_whole_percent and re.search(r"百分之几|百分率|百分比|占.*百分", text):
-        part, whole, _stated_rate = map(float, part_of_whole_percent.groups())
+    if part_of_whole_percent:
+        part, whole = map(float, part_of_whole_percent.groups())
         if whole > 0 and 0 <= part <= whole:
             rate = part / whole * 100
             return _steps_for_formula(
