@@ -266,7 +266,6 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
             if width <= 0:
                 return invalid("由周长和长反推出的宽必须大于0；当前数据不构成长方形。")
             area_value = length * width
-            length_unit_out = length_unit or perimeter_unit
             return SolvedProblem(
                 answer=f"{_number_text(area_value)}{area_result_unit}",
                 verification_status="verified",
