@@ -133,6 +133,9 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
     is_rectangle = "长方形" in text
     if not (is_square or is_rectangle):
         return None
+    # Rope-comparison questions have a dedicated multi-step solver below.
+    if is_square and re.search(r"绳子|绳长|绳索|绕.{0,3}一圈|围.{0,3}一圈", text):
+        return None
     if not any(token in text for token in ("面积", "周长", "边长", "宽", "长")):
         return None
 
@@ -174,6 +177,8 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
         if asks_perimeter:
             if side is None or side <= 0:
                 return invalid("求正方形周长需要已知正数边长；当前题目没有提供可确认的边长。")
+            if area is not None and not math.isclose(side * side, area, rel_tol=1e-9, abs_tol=1e-9):
+                return invalid("题目给出的边长与面积不符合正方形关系，不能同时成立。")
             result = side * 4
             return _steps_for_formula(
                 known=f"正方形边长 = {_number_text(side)}{side_unit}",
@@ -228,6 +233,15 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
                 )
             return invalid("求正方形边长需要已知周长或面积，当前缺少对应条件。")
         return invalid("已识别为正方形题，但没有明确识别出所求量；为避免误用公式，暂不作答。")
+
+    # Reject mixed measurement units rather than silently combining them.
+    if length_unit and width_unit and length_unit != width_unit:
+        return invalid("长和宽的单位不一致，必须先换算成同一长度单位。")
+    if area_unit and not area_unit.startswith("平方"):
+        return invalid("面积单位无法识别为平方长度单位，不能与长和宽直接计算。")
+    expected_area_unit = ("平方" + (length_unit or width_unit)) if (length_unit or width_unit) else ""
+    if area_unit and expected_area_unit and area_unit != expected_area_unit:
+        return invalid("面积单位与长、宽的长度单位不匹配，必须先统一单位。")
 
     # Rectangle relations: values are always taken from their labels, never
     # from the order in which numbers happen to appear in the sentence.
