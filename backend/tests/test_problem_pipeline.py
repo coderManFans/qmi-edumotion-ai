@@ -334,3 +334,18 @@ def test_benchmark_cases_have_complete_teaching_and_source_metadata():
             assert case["calculation_steps"]
 
 
+
+
+def test_square_perimeter_storyboard_uses_correct_answer_and_formula():
+    result = build_explanation("一个正方形的边长是4，求周长是多少", "text")
+    assert result.answer == "16"
+    assert result.verification_status == "verified"
+    assert any("边长 × 4" in scene.visual_text for scene in result.scenes)
+    assert result.scenes[-1].visual_text == "答案：16｜验证通过"
+
+
+def test_rectangle_perimeter_storyboard_uses_correct_answer_and_formula():
+    result = build_explanation("一个长方形长8厘米、宽5厘米，求周长是多少？", "text")
+    assert result.answer == "26厘米"
+    assert result.verification_status == "verified"
+    assert any("(8 + 5) * 2 = 26" in scene.visual_text for scene in result.scenes)
