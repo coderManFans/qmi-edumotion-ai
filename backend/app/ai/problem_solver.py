@@ -155,6 +155,15 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
     asks_area = "面积" in text and bool(re.search(r"求.{0,8}面积|面积是多少|面积多大|计算.{0,8}面积", text))
     asks_side = bool(re.search(r"求.{0,8}(?:边长|宽|长)|(?:边长|宽|长)是多少|求边长", text))
     unit = side_unit or length_unit or width_unit or perimeter_unit
+    if asks_area and asks_perimeter:
+        return SolvedProblem(
+            answer=None, verification_status="unverified",
+            explanation="题目同时要求面积和周长，当前规则不将多个所求量合并成一个答案。",
+            steps=[
+                SolvedStep(title="识别所求量", explanation="题目同时提到了面积和周长。", narration="这道题有两个不同的所求量，需要分别列式。", visual_text="面积 + 周长"),
+                SolvedStep(title="暂不合并作答", explanation="为避免只回答其中一个问题，当前先不生成单一答案。", narration="请将面积和周长拆成两个问题，分别求解。", visual_text="需要拆分问题"),
+            ],
+        )
     if unit.startswith("平方"):
         unit = ""
     area_result_unit = _area_unit(text)
@@ -984,24 +993,29 @@ def _local_solution(problem: str) -> SolvedProblem:
 
 
 def _verify_model_answer(solved: SolvedProblem) -> SolvedProblem:
-    """Only mark an LLM answer verified when its final arithmetic is independently reproducible."""
+    """Check arithmetic consistency, but never certify model reasoning semantically.
+
+    A valid equation alone does not prove that the equation represents the
+    quantities asked for in the word problem. Only deterministic, typed local
+    rules may currently produce a verified result.
+    """
+    solved.verification_status = "unverified"
     if solved.answer is None or not solved.steps:
-        solved.verification_status = "unverified"
         return solved
     expression = solved.steps[-1].expression
     if not expression or "=" not in expression:
-        solved.verification_status = "unverified"
         return solved
     left_side, right_side = expression.split("=", 1)
     normalized = left_side.replace("×", "*").replace("÷", "/").replace("−", "-").replace("^", "**")
     try:
         computed = _safe_arithmetic(normalized.strip())
-        expected = float(re.sub(r"[^0-9.\-]", "", right_side.strip()))
-        answer_value = float(re.sub(r"[^0-9.\-]", "", solved.answer))
-        valid = abs(computed - expected) < 1e-8 and abs(computed - answer_value) < 1e-8
-        solved.verification_status = "verified" if valid else "unverified"
+        expected = float(re.sub(r"[^0-9.\\-]", "", right_side.strip()))
+        answer_value = float(re.sub(r"[^0-9.\\-]", "", solved.answer))
+        # Arithmetic is only a necessary condition, not a semantic proof.
+        if abs(computed - expected) >= 1e-8 or abs(computed - answer_value) >= 1e-8:
+            solved.explanation += " 最后算式与答案不一致，结果未通过验证。"
     except (ValueError, SyntaxError, ZeroDivisionError):
-        solved.verification_status = "unverified"
+        solved.explanation += " 最后算式无法独立计算，结果未通过验证。"
     return solved
 
 
