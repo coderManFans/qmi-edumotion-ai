@@ -151,3 +151,23 @@ def test_square_rectangle_solver_rejects_incomplete_or_contradictory_data(proble
     solved = _local_solution(problem)
     assert solved.answer is None
     assert solved.verification_status == "unverified"
+
+@pytest.mark.parametrize(
+    ("problem", "expected"),
+    [
+        ("四年级练习：长方形的宽是5厘米，周长是26厘米，长是多少？", "8厘米"),
+        ("长方形的长是8厘米，周长是26厘米，宽是多少？", "5厘米"),
+        ("长方形宽5厘米、长8厘米，求面积是多少？", "40平方厘米"),
+        ("长方形面积是48平方厘米，宽是6厘米，求长是多少？", "8厘米"),
+    ],
+)
+def test_rectangle_solver_uses_labeled_values_not_number_order(problem, expected):
+    solved = _local_solution(problem)
+    assert solved.answer == expected
+    assert solved.verification_status == "verified"
+
+
+def test_geometry_question_with_two_requested_outputs_is_not_silently_truncated():
+    solved = _local_solution("一个长方形长8厘米、宽5厘米，求面积和周长。")
+    assert solved.answer is None
+    assert solved.verification_status == "unverified"
