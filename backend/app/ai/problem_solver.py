@@ -186,6 +186,8 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
         if asks_perimeter:
             if side is None or side <= 0:
                 return invalid("求正方形周长需要已知正数边长；当前题目没有提供可确认的边长。")
+            if side_unit and perimeter_unit and side_unit != perimeter_unit:
+                return invalid("正方形边长与周长的单位不一致，必须先换算成同一长度单位。")
             if area is not None and not math.isclose(side * side, area, rel_tol=1e-9, abs_tol=1e-9):
                 return invalid("题目给出的边长与面积不符合正方形关系，不能同时成立。")
             result = side * 4
@@ -248,6 +250,10 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
         return invalid("长和宽的单位不一致，必须先换算成同一长度单位。")
     if area_unit and not area_unit.startswith("平方"):
         return invalid("面积单位无法识别为平方长度单位，不能与长和宽直接计算。")
+    if perimeter_unit and length_unit and perimeter_unit != length_unit:
+        return invalid("周长单位与长的单位不一致，必须先换算成同一长度单位。")
+    if perimeter_unit and width_unit and perimeter_unit != width_unit:
+        return invalid("周长单位与宽的单位不一致，必须先换算成同一长度单位。")
     expected_area_unit = ("平方" + (length_unit or width_unit)) if (length_unit or width_unit) else ""
     if area_unit and expected_area_unit and area_unit != expected_area_unit:
         return invalid("面积单位与长、宽的长度单位不匹配，必须先统一单位。")
