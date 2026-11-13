@@ -299,6 +299,22 @@ def _solve_square_rectangle(problem: str) -> SolvedProblem | None:
                     ),
                 ],
             )
+        if perimeter is not None and width is not None and length is None:
+            length = perimeter / 2 - width
+            if length <= 0:
+                return invalid("由周长和宽反推出的长必须大于0；当前数据不构成长方形。")
+            area_value = length * width
+            return SolvedProblem(
+                answer=f"{_number_text(area_value)}{area_result_unit}",
+                verification_status="verified",
+                explanation="先根据长方形周长求出未知的长，再用长乘宽求面积。",
+                steps=[
+                    SolvedStep(title="提取条件", explanation=f"周长={_number_text(perimeter)}{perimeter_unit}，宽={_number_text(width)}{width_unit}", narration="题目已知周长和宽，需要先求出长。", visual_text=f"周长={_number_text(perimeter)}；宽={_number_text(width)}"),
+                    SolvedStep(title="先求长", explanation="长=周长÷2−宽。", narration=f"用周长{_number_text(perimeter)}除以2，再减去宽{_number_text(width)}，得到长{_number_text(length)}。", visual_text=f"{_number_text(perimeter)} ÷ 2 − {_number_text(width)} = {_number_text(length)}"),
+                    SolvedStep(title="再求面积", explanation="面积=长×宽。", narration=f"长是{_number_text(length)}，宽是{_number_text(width)}，相乘得到面积{_number_text(area_value)}。", visual_text=f"{_number_text(length)} × {_number_text(width)} = {_number_text(area_value)}"),
+                    SolvedStep(title="验证", explanation=f"({_number_text(length)}+{_number_text(width)})×2={_number_text(perimeter)}；长×宽={_number_text(area_value)}。", narration="将长和宽代回周长公式，确认数据一致，再复核面积。", visual_text=f"答案：{_number_text(area_value)}{area_result_unit}｜周长复核通过"),
+                ],
+            )
         if length is None or width is None or length <= 0 or width <= 0:
             return invalid("求长方形面积需要已知正数的长和宽；当前条件不足或尺寸无效。")
         if area is not None and not math.isclose(length * width, area, rel_tol=1e-9, abs_tol=1e-9):
