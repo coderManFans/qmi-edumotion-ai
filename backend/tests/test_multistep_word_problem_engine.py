@@ -171,3 +171,11 @@ def test_geometry_question_with_two_requested_outputs_is_not_silently_truncated(
     solved = _local_solution("一个长方形长8厘米、宽5厘米，求面积和周长。")
     assert solved.answer is None
     assert solved.verification_status == "unverified"
+
+
+def test_rectangle_area_can_be_derived_from_perimeter_and_known_width():
+    solved = _local_solution("一个长方形周长是26厘米，宽是5厘米，面积是多少？")
+    assert solved.answer == "40平方厘米"
+    assert solved.verification_status == "verified"
+    assert any(step.title == "先求长" for step in solved.steps)
+    assert any(step.title == "再求面积" for step in solved.steps)
